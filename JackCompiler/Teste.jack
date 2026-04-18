@@ -1,0 +1,8 @@
+// Esse comentário deve sumir
+class Main {
+    /* Comentário de bloco 
+       também deve sumir */
+    function void main() {
+        var int x; // Variável de teste
+    }
+}

@@ -1,24 +1,37 @@
 using System.Text.RegularExpressions;
-using JackCompiler.Enums;
 
 namespace JackCompiler.Modules
 {
     public class JackTokenizer
     {
-        // Regex para Símbolos da linguagem Jack
-        private static readonly string SymbolPattern = @"[{}()\[\].,;+\-*/&|<>=~]";
-        
-        // Regex para Números (0 a 32767)
-        private static readonly string IntPattern = @"\d+";
+        private string _rawContent;
 
-        public void ProcessarLinha(string linha)
+        public JackTokenizer(string filePath)
         {
-            // Exemplo simples: verificando se a linha contém um símbolo
-            if (Regex.IsMatch(linha, SymbolPattern))
-            {
-                var match = Regex.Match(linha, SymbolPattern);
-                Console.WriteLine($"Símbolo encontrado: {match.Value}");
-            }
+            // Leitura de todo o conteúdo do arquivo .jack
+            _rawContent = File.ReadAllText(filePath);
+            
+            // Remoção de comentários do código
+            _rawContent = RemoveComments(_rawContent);
+            
+            // Teste para verificar o conteúdo limpo
+            Console.WriteLine("--- Código Limpo ---");
+            Console.WriteLine(_rawContent);
+        }
+
+        private string RemoveComments(string input)
+        {
+            // Regex para comentários de bloco /* ... */ e /** ... */
+            // O RegexOptions.Singleline faz o '.' capturar quebras de linha também
+            string blockComments = @"/\*.*?\*/";
+            
+            // Regex para comentários de linha //
+            string lineComments = @"//.*";
+
+            string clean = Regex.Replace(input, blockComments, "", RegexOptions.Singleline);
+            clean = Regex.Replace(clean, lineComments, "");
+
+            return clean.Trim();
         }
     }
 }
