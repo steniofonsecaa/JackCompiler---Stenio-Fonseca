@@ -11,7 +11,7 @@ namespace JackCompiler.Modules
         private string _currentToken = "";
         
         public string CurrentToken => _currentToken;
-        
+
         // Conjunto de palavras-chave do Jack
         private static readonly HashSet<string> Keywords = new HashSet<string>
         {
@@ -107,6 +107,22 @@ namespace JackCompiler.Modules
                 return TokenType.STRING_CONST;
                 
             return TokenType.IDENTIFIER;
+        }
+
+        // Retorna o token formatado para saída XML
+        public string GetTokenTag()
+{
+            var tipo = GetTokenType();
+            string tag = tipo.ToString().ToLower().Replace("_const", "Constant");
+            
+            // Substituição de caracteres especiais para a saída XML
+            string valor = CurrentToken;
+            if (valor == "<") valor = "&lt;";
+            else if (valor == ">") valor = "&gt;";
+            else if (valor == "\"") valor = "&quot;";
+            else if (valor == "&") valor = "&amp;";
+
+            return $"<{tag}> {valor} </{tag}>";
         }
     }
 }
