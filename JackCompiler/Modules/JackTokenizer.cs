@@ -111,7 +111,7 @@ namespace JackCompiler.Modules
 
         // Retorna o token formatado para saída XML
         public string GetTokenTag()
-{
+        {
             var tipo = GetTokenType();
             string tag = tipo.ToString().ToLower().Replace("_const", "Constant");
             

@@ -15,23 +15,27 @@ if (!File.Exists(inputPath))
     return;
 }
 
-// Verificação para garantir que o arquivo é um .jack
+// Processamento do arquivo .jack e geração do arquivo XML de tokens
 try
 {
-    // Instanciação do tokenizador com o caminho do arquivo .jack
     var tokenizer = new JackTokenizer(inputPath);
+    string outputPath = inputPath.Replace(".jack", "T.xml");
     
-    Console.WriteLine("--- EXECUTANDO ANALISADOR ---");
-    
-    while (tokenizer.HasMoreTokens())
+    using (StreamWriter writer = new StreamWriter(outputPath))
     {
-        tokenizer.Advance();
-        var tipo = tokenizer.GetTokenType();
+        writer.WriteLine("<tokens>");
         
-        // Formatação para saída dos tokens e seus tipos
-        Console.WriteLine(string.Format("Token: {0,-15} | Tipo: {1}", 
-            tokenizer.CurrentToken, tipo));
+        while (tokenizer.HasMoreTokens())
+        {
+            tokenizer.Advance();
+            // Escreve a tag XML no arquivo
+            writer.WriteLine(tokenizer.GetTokenTag());
+        }
+        
+        writer.WriteLine("</tokens>");
     }
+
+    Console.WriteLine($"\nSucesso! Arquivo XML gerado em: {outputPath}");
 }
 catch (Exception ex)
 {
