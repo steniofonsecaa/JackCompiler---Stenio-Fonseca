@@ -1,9 +1,17 @@
 using System.Text.RegularExpressions;
+using JackCompiler.Enums;
+using System.Collections.Generic;
+
 
 namespace JackCompiler.Modules
 {
     public class JackTokenizer
     {
+        private int _currentIndex = -1;
+        private string _currentToken = "";
+        
+        public string CurrentToken => _currentToken;
+        
         // Conjunto de palavras-chave do Jack
         private static readonly HashSet<string> Keywords = new HashSet<string>
         {
@@ -60,11 +68,45 @@ namespace JackCompiler.Modules
             }
             
             // Teste para verificar os tokens encontrados
-            Console.WriteLine($"\nTokens encontrados: {_tokens.Count}");
-            foreach (var t in _tokens)
+            //Console.WriteLine($"\nTokens encontrados: {_tokens.Count}");
+            //foreach (var t in _tokens)
+            //{
+            //    Console.WriteLine($"Token: [{t}]");
+            //}
+        }
+
+        // Procura por mais tokens no código
+        public bool HasMoreTokens()
+        {
+            return _currentIndex + 1 < _tokens.Count;
+        }
+
+        // Avança para o próximo token
+        public void Advance()
+        {
+            if (HasMoreTokens())
             {
-                Console.WriteLine($"Token: [{t}]");
+                _currentIndex++;
+                _currentToken = _tokens[_currentIndex];
             }
+        }
+
+        // Retorna o tipo do token atual
+        public TokenType GetTokenType()
+        {
+            if (Keywords.Contains(_currentToken))
+                return TokenType.KEYWORD;
+            
+            if (Regex.IsMatch(_currentToken, @"[{}()\[\].,;+\-*/&|<>=~]"))
+                return TokenType.SYMBOL;
+                
+            if (Regex.IsMatch(_currentToken, @"^\d+$"))
+                return TokenType.INT_CONST;
+                
+            if (_currentToken.StartsWith("\""))
+                return TokenType.STRING_CONST;
+                
+            return TokenType.IDENTIFIER;
         }
     }
 }
