@@ -8,9 +8,11 @@
 <symbol> ( </symbol>
 <symbol> ) </symbol>
 <symbol> { </symbol>
+<varDec>
 <keyword> var </keyword>
 <keyword> int </keyword>
 <identifier> x </identifier>
 <symbol> ; </symbol>
+</varDec>
 <symbol> } </symbol>
 </class>

@@ -56,17 +56,26 @@ namespace JackCompiler.Modules
             _tokenizer.Advance();
             ProcessToken();
 
-            // Ler apenas os valores
             while (_tokenizer.HasMoreTokens())
             {
                 _tokenizer.Advance();
+
+                // Se achar '}', a classe acabou
                 if (_tokenizer.CurrentToken == "}") break;
-                ProcessToken();
+
+                // Se encontrar 'var', e chamado a regra específica de variáveis
+                if (_tokenizer.CurrentToken == "var")
+                {
+                    CompileVarDec(); 
+                }
+                else
+                {
+                    // Se não for var, sera processado normalmente
+                    ProcessToken();
+                }
             }
 
-            // Fechar a chave '}'
-            ProcessToken();
-
+            ProcessToken(); // Escreve o '}' final
             _writer.WriteLine("</class>");
         }
 
