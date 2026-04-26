@@ -241,5 +241,31 @@ namespace JackCompiler.Modules
             ProcessToken();
             _writer.WriteLine("</subroutineBody>");
         }
+
+        // Metodo para compilar os comandos dentro do corpo de uma sub-rotina, seguindo a estrutura da gramática do Jack
+        public void CompileStatements()
+        {
+            _writer.WriteLine("<statements>");
+
+            // O loop continua enquanto o token for uma das palavras-chave de comando
+            while (_tokenizer.CurrentToken == "let" || _tokenizer.CurrentToken == "if" || 
+                _tokenizer.CurrentToken == "while" || _tokenizer.CurrentToken == "do" || 
+                _tokenizer.CurrentToken == "return")
+            {
+                switch (_tokenizer.CurrentToken)
+                {
+                    case "let": CompileLet(); break;
+                    case "if": CompileIf(); break;
+                    case "while": CompileWhile(); break;
+                    case "do": CompileDo(); break;
+                    case "return": CompileReturn(); break;
+                }
+                
+                // Avança para o próximo token para verificar se é outro comando ou se as statements acabaram
+                if (_tokenizer.HasMoreTokens()) _tokenizer.Advance();
+            }
+
+            _writer.WriteLine("</statements>");
+        }
     }
 }
