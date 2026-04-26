@@ -22,29 +22,49 @@ namespace JackCompiler.Modules
             _writer.WriteLine($"<{tag}> {value} </{tag}>");
         }
 
-        // Método para compilar uma classe, seguindo a estrutura da gramática do Jack
+        private void proceessToken()
+        {
+            var type = _tokenizer.GetTokenType();
+            // Converte o tipo do token para a tag XML correspondente
+            string tag = type.ToString().ToLower().Replace("_const", "Constant"); 
 
+            // Tratamento de caracteres especiais para a saída XML
+            string valor = _tokenizer.CurrentToken;
+            if (valor == "<") valor = "&lt;";
+            else if (valor == ">") valor = "&gt;";
+            else if (valor == "\"") valor = "&quot;";
+            else if (valor == "&") valor = "&amp;";
+
+            _writer.WriteLine($"<{tag}> {valor} </{tag}>");
+        }
+
+        // Método para compilar uma classe, seguindo a estrutura da gramática do Jack   
         public void CompileClass()
         {
             _writer.WriteLine("<class>");
             
-            // Primeiro componente: 'class' (keyword)
+            // 1. 'class'
             _tokenizer.Advance();
-            WriteTag("keyword", _tokenizer.CurrentToken);
+            ProcessToken();
 
-            // Segundo componente: nome da classe (identifier)
+            // 2. className
             _tokenizer.Advance();
-            WriteTag("identifier", _tokenizer.CurrentToken);
+            ProcessToken();
 
-            // Terceiro componente: '{' (symbol)    
+            // 3. '{'
             _tokenizer.Advance();
-            WriteTag("symbol", _tokenizer.CurrentToken);
+            ProcessToken();
 
-            // TODO: Aqui virão as chamadas para CompileClassVarDec e CompileSubroutine
-            
-            // Teste para verificar se o tokenizador está avançando corretamente até o final da classe
-            _tokenizer.Advance(); // Esperando o '}'
-            WriteTag("symbol", _tokenizer.CurrentToken);
+            // Ler apenas os valores
+            while (_tokenizer.HasMoreTokens())
+            {
+                _tokenizer.Advance();
+                if (_tokenizer.CurrentToken == "}") break;''
+                ProcessToken();
+            }
+
+            // Fechar a chave '}'
+            ProcessToken();
 
             _writer.WriteLine("</class>");
         }
