@@ -28,21 +28,21 @@ namespace JackCompiler.Modules
         {
             _writer.WriteLine("<class>");
             
-            // 1. 'class'
+            // Primeiro componente: 'class' (keyword)
             _tokenizer.Advance();
             WriteTag("keyword", _tokenizer.CurrentToken);
 
-            // 2. className (Identifier)
+            // Segundo componente: nome da classe (identifier)
             _tokenizer.Advance();
             WriteTag("identifier", _tokenizer.CurrentToken);
 
-            // 3. '{'
+            // Terceiro componente: '{' (symbol)    
             _tokenizer.Advance();
             WriteTag("symbol", _tokenizer.CurrentToken);
 
             // TODO: Aqui virão as chamadas para CompileClassVarDec e CompileSubroutine
             
-            // Por enquanto, vamos fechar a classe para teste
+            // Teste para verificar se o tokenizador está avançando corretamente até o final da classe
             _tokenizer.Advance(); // Esperando o '}'
             WriteTag("symbol", _tokenizer.CurrentToken);
 

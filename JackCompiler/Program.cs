@@ -15,29 +15,53 @@ if (!File.Exists(inputPath))
     return;
 }
 
-// Processamento do arquivo .jack e geração do arquivo XML de tokens
 try
 {
+    // Inicializa o Tokenizer com o ficheiro .jack
     var tokenizer = new JackTokenizer(inputPath);
-    string outputPath = inputPath.Replace(".jack", "T.xml");
     
-    using (StreamWriter writer = new StreamWriter(outputPath))
-    {
-        writer.WriteLine("<tokens>");
-        
-        while (tokenizer.HasMoreTokens())
-        {
-            tokenizer.Advance();
-            // Escreve a tag XML no arquivo
-            writer.WriteLine(tokenizer.GetTokenTag());
-        }
-        
-        writer.WriteLine("</tokens>");
-    }
-
-    Console.WriteLine($"\nSucesso! Arquivo XML gerado em: {outputPath}");
+    // Define o nome do ficheiro de saída (sem o 'T' agora, pois é a estrutura completa)
+    string xmlOutput = inputPath.Replace(".jack", ".xml");
+    
+    // Cria a Engine e inicia a compilação pela regra principal: Class
+    Console.WriteLine("--- REALIZANDO ANÁLISE SINTÁTICA ---");
+    var engine = new CompilationEngine(tokenizer, xmlOutput);
+    
+    engine.CompileClass();
+    
+    // Fecha o arquivo de saída
+    engine.Close();
+    
+    Console.WriteLine($"\nAnálise concluída com sucesso! Ficheiro gerado: {xmlOutput}");
 }
 catch (Exception ex)
 {
-    Console.WriteLine($"Erro fatal: {ex.Message}");
+    Console.WriteLine($"Erro durante a análise sintática: {ex.Message}");
 }
+
+// Processamento do arquivo .jack e geração do arquivo XML de tokens
+//try
+//{
+//    var tokenizer = new JackTokenizer(inputPath);
+//    string outputPath = inputPath.Replace(".jack", "T.xml");
+    
+//    using (StreamWriter writer = new StreamWriter(outputPath))
+//    {
+//        writer.WriteLine("<tokens>");
+        
+//        while (tokenizer.HasMoreTokens())
+//        {
+//            tokenizer.Advance();
+//            // Escreve a tag XML no arquivo
+//            writer.WriteLine(tokenizer.GetTokenTag());
+//        }
+        
+//       writer.WriteLine("</tokens>");
+//    }
+
+//    Console.WriteLine($"\nSucesso! Arquivo XML gerado em: {outputPath}");
+//}
+//catch (Exception ex)
+//{
+//    Console.WriteLine($"Erro fatal: {ex.Message}");
+//}
