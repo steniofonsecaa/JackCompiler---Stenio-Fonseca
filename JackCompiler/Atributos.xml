@@ -1,0 +1,34 @@
+<class>
+<keyword> class </keyword>
+<identifier> Atributos </identifier>
+<symbol> { </symbol>
+<classVarDec>
+<keyword> field </keyword>
+<keyword> int </keyword>
+<identifier> x </identifier>
+<symbol> , </symbol>
+<identifier> y </identifier>
+<symbol> ; </symbol>
+</classVarDec>
+<symbol> ; </symbol>
+<classVarDec>
+<keyword> static </keyword>
+<keyword> boolean </keyword>
+<identifier> isReady </identifier>
+<symbol> ; </symbol>
+</classVarDec>
+<symbol> ; </symbol>
+<keyword> function </keyword>
+<keyword> void </keyword>
+<identifier> start </identifier>
+<symbol> ( </symbol>
+<symbol> ) </symbol>
+<symbol> { </symbol>
+<varDec>
+<keyword> var </keyword>
+<keyword> int </keyword>
+<identifier> i </identifier>
+<symbol> ; </symbol>
+</varDec>
+<symbol> } </symbol>
+</class>

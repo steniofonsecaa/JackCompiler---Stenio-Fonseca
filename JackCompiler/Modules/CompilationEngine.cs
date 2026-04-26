@@ -63,6 +63,12 @@ namespace JackCompiler.Modules
                 // Se achar '}', a classe acabou
                 if (_tokenizer.CurrentToken == "}") break;
 
+                // Se encontrar 'static' ou 'field', é chamado a regra específica de variáveis de classe
+                if (_tokenizer.CurrentToken == "static" || _tokenizer.CurrentToken == "field")
+                {
+                    CompileClassVarDec(); 
+                }
+
                 // Se encontrar 'var', e chamado a regra específica de variáveis
                 if (_tokenizer.CurrentToken == "var")
                 {
@@ -110,8 +116,43 @@ namespace JackCompiler.Modules
 
             // Escreve o ';'
             ProcessToken();
-
+    
             _writer.WriteLine("</varDec>");
+        }
+
+        public void CompileClassVarDec()
+        {
+            _writer.WriteLine("<classVarDec>");
+            
+            // Processa 'static' ou 'field'
+            ProcessToken();
+
+            // Tipo (int, char, boolean ou className)
+            _tokenizer.Advance();
+            ProcessToken();
+
+            // Apresenta o nome da variável
+            _tokenizer.Advance();
+            ProcessToken();
+
+            // Tratamento para múltiplas variáveis na mesma linha: static int x, y;
+            while (_tokenizer.HasMoreTokens())
+            {
+                _tokenizer.Advance();
+                if (_tokenizer.CurrentToken == ";") break;
+                
+                if (_tokenizer.CurrentToken == ",")
+                {
+                    ProcessToken(); // Para escrever a vírgula
+                    _tokenizer.Advance();
+                    ProcessToken(); // Para escrever o próximo nome
+                }
+            }
+
+            // Finaliza a declaração com ';'
+            ProcessToken();
+
+            _writer.WriteLine("</classVarDec>");
         }
     }
 }

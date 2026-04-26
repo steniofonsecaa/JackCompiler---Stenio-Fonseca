@@ -1,0 +1,8 @@
+class Atributos {
+    field int x, y;
+    static boolean isReady;
+    
+    function void start() {
+        var int i;
+    }
+}
