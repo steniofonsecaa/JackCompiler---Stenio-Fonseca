@@ -22,18 +22,19 @@ namespace JackCompiler.Modules
             _writer.WriteLine($"<{tag}> {value} </{tag}>");
         }
 
-        private void proceessToken()
+        // Processa o token atual do tokenizer e escreve a tag XML correspondente
+        private void ProcessToken()
         {
             var type = _tokenizer.GetTokenType();
-            // Converte o tipo do token para a tag XML correspondente
-            string tag = type.ToString().ToLower().Replace("_const", "Constant"); 
-
-            // Tratamento de caracteres especiais para a saída XML
+            string tag = type.ToString().ToLower().Replace("_const", "Constant");
+            
             string valor = _tokenizer.CurrentToken;
+
+            // Substitui caracteres especiais para a saída XML
             if (valor == "<") valor = "&lt;";
             else if (valor == ">") valor = "&gt;";
-            else if (valor == "\"") valor = "&quot;";
             else if (valor == "&") valor = "&amp;";
+            else if (valor == "\"") valor = "&quot;";
 
             _writer.WriteLine($"<{tag}> {valor} </{tag}>");
         }
@@ -59,7 +60,7 @@ namespace JackCompiler.Modules
             while (_tokenizer.HasMoreTokens())
             {
                 _tokenizer.Advance();
-                if (_tokenizer.CurrentToken == "}") break;''
+                if (_tokenizer.CurrentToken == "}") break;
                 ProcessToken();
             }
 
