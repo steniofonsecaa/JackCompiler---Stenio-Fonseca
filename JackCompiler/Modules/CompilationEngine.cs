@@ -70,9 +70,11 @@ namespace JackCompiler.Modules
                     CompileClassVarDec(); 
                 }
                 // Se encontrar 'constructor', 'function' ou 'method', é chamado a regra específica de sub-rotinas
-                else if (_tokenizer.CurrentToken == "constructor" || _tokenizer.CurrentToken == "function" || _tokenizer.CurrentToken == "method")
+                else if (_tokenizer.CurrentToken == "constructor" || 
+                        _tokenizer.CurrentToken == "function" || 
+                        _tokenizer.CurrentToken == "method")
                 {
-                    CompileSubroutine(); 
+                    CompileSubroutine();
                 }
                 // Se encontrar 'var', e chamado a regra específica de variáveis
                 else if (_tokenizer.CurrentToken == "var")
@@ -182,7 +184,8 @@ namespace JackCompiler.Modules
             _tokenizer.Advance();
             ProcessToken();
 
-            // Desenvolvimento
+            // Chamada da lista de paramentros (mesmo que seja vazia)
+            CompileParameterList();
             
             // Fecha parênteses ')'
             _tokenizer.Advance();
@@ -192,6 +195,23 @@ namespace JackCompiler.Modules
             CompileSubroutineBody();
 
             _writer.WriteLine("</subroutineDec>");
+        }
+        
+        // Metodo para compilar a lista de parâmetros de uma sub-rotina, seguindo a estrutura da gramática do Jack
+        public void CompileParameterList()
+        {
+            _writer.WriteLine("<parameterList>");
+
+            _tokenizer.Advance();
+            
+            // Enquanto não encontrar o fecha parênteses, processa os tipos e nomes
+            while (_tokenizer.CurrentToken != ")")
+            {
+                ProcessToken(); // Tipo ou Vírgula
+                _tokenizer.Advance();
+            }
+
+            _writer.WriteLine("</parameterList>");
         }
 
         // Metodo para compilar o corpo de uma sub-rotina, seguindo a estrutura da gramática do Jack
@@ -203,8 +223,24 @@ namespace JackCompiler.Modules
             _tokenizer.Advance();
             ProcessToken();
 
-            // TODO: Aqui chamaremos CompileVarDec() se houver variáveis
-            // E depois CompileStatements()
+            // Enquanto houver variáveis locais 'var', chama CompileVarDec
+            while (_tokenizer.HasMoreTokens())
+            {
+                _tokenizer.Advance();
+                
+                if (_tokenizer.CurrentToken == "var")
+                {
+                    CompileVarDec();
+                }
+                else if (_tokenizer.CurrentToken == "}")
+                {
+                    break;
+                }
+                else
+                {
+                    ProcessToken();
+                }
+            }
             
             // Fecha chave '}'
             _tokenizer.Advance();
