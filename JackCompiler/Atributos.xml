@@ -23,12 +23,15 @@
 <symbol> ( </symbol>
 <parameterList>
 </parameterList>
-<symbol> { </symbol>
+<symbol> ) </symbol>
 <subroutineBody>
+<symbol> { </symbol>
+<varDec>
 <keyword> var </keyword>
 <keyword> int </keyword>
 <identifier> i </identifier>
 <symbol> ; </symbol>
+</varDec>
 <symbol> } </symbol>
 </subroutineBody>
 </subroutineDec>

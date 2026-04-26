@@ -168,7 +168,6 @@ namespace JackCompiler.Modules
         public void CompileSubroutine()
         {
             _writer.WriteLine("<subroutineDec>");
-            
             // Escreve 'function', 'method' ou 'constructor'
             ProcessToken();
 
@@ -186,10 +185,7 @@ namespace JackCompiler.Modules
 
             // Chamada da lista de paramentros (mesmo que seja vazia)
             CompileParameterList();
-            
-            // Fecha parênteses ')'
-            _tokenizer.Advance();
-            ProcessToken();
+            ProcessToken(); // Fecha parênteses ')'
 
             // Corpo da sub-rotina
             CompileSubroutineBody();
@@ -201,7 +197,6 @@ namespace JackCompiler.Modules
         public void CompileParameterList()
         {
             _writer.WriteLine("<parameterList>");
-
             _tokenizer.Advance();
             
             // Enquanto não encontrar o fecha parênteses, processa os tipos e nomes
@@ -243,9 +238,7 @@ namespace JackCompiler.Modules
             }
             
             // Fecha chave '}'
-            _tokenizer.Advance();
             ProcessToken();
-
             _writer.WriteLine("</subroutineBody>");
         }
     }
