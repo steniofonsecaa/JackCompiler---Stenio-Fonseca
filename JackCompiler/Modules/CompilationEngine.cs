@@ -69,5 +69,40 @@ namespace JackCompiler.Modules
 
             _writer.WriteLine("</class>");
         }
+
+        public void CompileVarDec()
+        {
+            _writer.WriteLine("<varDec>");
+            
+            // Processa a palavra-chave 'var'
+            ProcessToken(); 
+
+            // Tipo (int, char, boolean ou className)
+            _tokenizer.Advance();
+            ProcessToken();
+
+            // Nome da variável
+            _tokenizer.Advance();
+            ProcessToken();
+
+            // Suporte para múltiplas variáveis declaradas na mesma linha (ex: var int x, y, z;)
+            while (_tokenizer.HasMoreTokens())
+            {
+                _tokenizer.Advance();
+                if (_tokenizer.CurrentToken == ";") break;
+                
+                if (_tokenizer.CurrentToken == ",")
+                {
+                    ProcessToken(); // Escreve a vírgula
+                    _tokenizer.Advance();
+                    ProcessToken(); // Escreve o próximo nome
+                }
+            }
+
+            // Escreve o ';'
+            ProcessToken();
+
+            _writer.WriteLine("</varDec>");
+        }
     }
 }
