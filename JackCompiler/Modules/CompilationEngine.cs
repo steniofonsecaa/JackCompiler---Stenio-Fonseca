@@ -267,5 +267,23 @@ namespace JackCompiler.Modules
 
             _writer.WriteLine("</statements>");
         }
+
+        // Método para compilar um comando de retorno, seguindo a estrutura da gramática do Jack
+        public void CompileReturn()
+        {
+            _writer.WriteLine("<returnStatement>");
+            ProcessToken(); // chave 'return'
+
+            _tokenizer.Advance();
+            if (_tokenizer.CurrentToken != ";")
+            {
+                // Desenvolvimento
+                ProcessToken(); 
+                _tokenizer.Advance();
+            }
+
+            ProcessToken(); // simbolo ';'
+            _writer.WriteLine("</returnStatement>");
+        }
     }
 }
