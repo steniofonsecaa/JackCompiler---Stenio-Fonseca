@@ -7,6 +7,7 @@ namespace JackCompiler.Modules
         private JackTokenizer _tokenizer;
         private StreamWriter _writer;
 
+        // Metodo construtor que recebe o tokenizer e o caminho do arquivo de saída para inicializar o StreamWriter
         public CompilationEngine(JackTokenizer tokenizer, string outputPath)
         {
             _tokenizer = tokenizer;
@@ -68,7 +69,11 @@ namespace JackCompiler.Modules
                 {
                     CompileClassVarDec(); 
                 }
-
+                // Se encontrar 'constructor', 'function' ou 'method', é chamado a regra específica de sub-rotinas
+                else if (_tokenizer.CurrentToken == "constructor" || _tokenizer.CurrentToken == "function" || _tokenizer.CurrentToken == "method")
+                {
+                    CompileSubroutine(); 
+                }
                 // Se encontrar 'var', e chamado a regra específica de variáveis
                 else if (_tokenizer.CurrentToken == "var")
                 {
@@ -85,6 +90,7 @@ namespace JackCompiler.Modules
             _writer.WriteLine("</class>");
         }
 
+        // Método para compilar variáveis locais dentro de sub-rotinas, seguindo a estrutura da gramática do Jack
         public void CompileVarDec()
         {
             _writer.WriteLine("<varDec>");
@@ -120,6 +126,7 @@ namespace JackCompiler.Modules
             _writer.WriteLine("</varDec>");
         }
 
+        // Metodo para compilar variáveis de classe (static ou field), seguindo a estrutura da gramática do Jack
         public void CompileClassVarDec()
         {
             _writer.WriteLine("<classVarDec>");
@@ -153,6 +160,57 @@ namespace JackCompiler.Modules
             ProcessToken();
 
             _writer.WriteLine("</classVarDec>");
+        }
+
+        // Metodo para compilar sub-rotinas (constructor, function ou method), seguindo a estrutura da gramática do Jack
+        public void CompileSubroutine()
+        {
+            _writer.WriteLine("<subroutineDec>");
+            
+            // Escreve 'function', 'method' ou 'constructor'
+            ProcessToken();
+
+            // Tipo de retorno (void, int, etc.)
+            _tokenizer.Advance();
+            ProcessToken();
+
+            // Nome da sub-rotina
+            _tokenizer.Advance();
+            ProcessToken();
+
+            // Abre parênteses '('
+            _tokenizer.Advance();
+            ProcessToken();
+
+            // Desenvolvimento
+            
+            // Fecha parênteses ')'
+            _tokenizer.Advance();
+            ProcessToken();
+
+            // Corpo da sub-rotina
+            CompileSubroutineBody();
+
+            _writer.WriteLine("</subroutineDec>");
+        }
+
+        // Metodo para compilar o corpo de uma sub-rotina, seguindo a estrutura da gramática do Jack
+        private void CompileSubroutineBody()
+        {
+            _writer.WriteLine("<subroutineBody>");
+            
+            // Abre chave '{'
+            _tokenizer.Advance();
+            ProcessToken();
+
+            // TODO: Aqui chamaremos CompileVarDec() se houver variáveis
+            // E depois CompileStatements()
+            
+            // Fecha chave '}'
+            _tokenizer.Advance();
+            ProcessToken();
+
+            _writer.WriteLine("</subroutineBody>");
         }
     }
 }
