@@ -10,14 +10,12 @@
 <identifier> y </identifier>
 <symbol> ; </symbol>
 </classVarDec>
-<symbol> ; </symbol>
 <classVarDec>
 <keyword> static </keyword>
 <keyword> boolean </keyword>
 <identifier> isReady </identifier>
 <symbol> ; </symbol>
 </classVarDec>
-<symbol> ; </symbol>
 <keyword> function </keyword>
 <keyword> void </keyword>
 <identifier> start </identifier>

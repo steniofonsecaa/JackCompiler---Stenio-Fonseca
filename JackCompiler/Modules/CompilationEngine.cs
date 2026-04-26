@@ -70,7 +70,7 @@ namespace JackCompiler.Modules
                 }
 
                 // Se encontrar 'var', e chamado a regra específica de variáveis
-                if (_tokenizer.CurrentToken == "var")
+                else if (_tokenizer.CurrentToken == "var")
                 {
                     CompileVarDec(); 
                 }
