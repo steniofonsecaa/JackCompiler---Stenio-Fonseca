@@ -250,23 +250,24 @@ namespace JackCompiler.Modules
         {
             _writer.WriteLine("<statements>");
 
-            // O loop continua enquanto o token for uma das palavras-chave de comando
-            while (_tokenizer.CurrentToken == "let" || _tokenizer.CurrentToken == "if" || 
-                _tokenizer.CurrentToken == "while" || _tokenizer.CurrentToken == "do" || 
-                _tokenizer.CurrentToken == "return")
+            // Processa os comandos enquanto não encontrar o fechamento do bloco (})
+            while (true)
             {
-                // Chama o método específico para cada tipo de comando
-                switch (_tokenizer.CurrentToken)
-                {
-                    case "let": CompileLet(); break;
-                    case "if": CompileIf(); break;
-                    case "while": CompileWhile(); break;
-                    case "do": CompileDo(); break;
-                    case "return": CompileReturn(); break;
-                }
+                string token = _tokenizer.CurrentToken;
                 
-                // Avança para o próximo token para verificar se é outro comando ou se as statements acabaram
-                if (_tokenizer.HasMoreTokens()) _tokenizer.Advance();
+                if (token == "let") CompileLet();
+                else if (token == "if") CompileIf();
+                else if (token == "while") CompileWhile();
+                else if (token == "do") CompileDo();
+                else if (token == "return") CompileReturn();
+                else break; // Se não for nenhum comando, sai do loop (provavelmente achou '}')
+
+                // Após processar um comando, precisamos avançar para ver o próximo
+                if (_tokenizer.HasMoreTokens()) 
+                {
+                    _tokenizer.Advance();
+                }
+                else break;
             }
 
             _writer.WriteLine("</statements>");
