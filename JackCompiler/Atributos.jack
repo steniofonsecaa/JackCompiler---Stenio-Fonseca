@@ -1,6 +1,13 @@
 function void start() {
     var int i;
-    let i = 10;
-    do Output.printInt(i);
+    let i = 0;
+    
+    while (i < 10) {
+        if (i = 5) {
+            do Output.printInt(i);
+        }
+        let i = i + 1;
+    }
+    
     return;
 }

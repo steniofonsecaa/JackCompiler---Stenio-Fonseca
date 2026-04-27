@@ -14,8 +14,22 @@
 <keyword> let </keyword>
 <identifier> i </identifier>
 <symbol> = </symbol>
-<intConstant> 10 </intConstant>
+<intConstant> 0 </intConstant>
 <symbol> ; </symbol>
+<keyword> while </keyword>
+<symbol> ( </symbol>
+<identifier> i </identifier>
+<symbol> &lt; </symbol>
+<intConstant> 10 </intConstant>
+<symbol> ) </symbol>
+<symbol> { </symbol>
+<keyword> if </keyword>
+<symbol> ( </symbol>
+<identifier> i </identifier>
+<symbol> = </symbol>
+<intConstant> 5 </intConstant>
+<symbol> ) </symbol>
+<symbol> { </symbol>
 <keyword> do </keyword>
 <identifier> Output </identifier>
 <symbol> . </symbol>
@@ -23,8 +37,6 @@
 <symbol> ( </symbol>
 <identifier> i </identifier>
 <symbol> ) </symbol>
-<symbol> ; </symbol>
-<keyword> return </keyword>
 <symbol> ; </symbol>
 <symbol> } </symbol>
 </class>

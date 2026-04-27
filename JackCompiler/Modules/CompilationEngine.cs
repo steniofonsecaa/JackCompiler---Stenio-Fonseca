@@ -260,7 +260,7 @@ namespace JackCompiler.Modules
                 {
                     case "let": CompileLet(); break;
                     case "if": CompileIf(); break;
-                    //case "while": CompileWhile(); break;
+                    case "while": CompileWhile(); break;
                     case "do": CompileDo(); break;
                     case "return": CompileReturn(); break;
                 }
@@ -401,6 +401,39 @@ namespace JackCompiler.Modules
             }
 
             _writer.WriteLine("</ifStatement>");
+        }
+
+
+        public void CompileWhile()
+        {
+            _writer.WriteLine("<whileStatement>");
+            
+            // Busca 'while'
+            ProcessToken();
+
+            // Identifica '('
+            _tokenizer.Advance();
+            ProcessToken();
+
+            // Avalia Condição (Expression)
+            // Avançamos até fechar o parêntese da condição
+            while (_tokenizer.CurrentToken != ")")
+            {
+                _tokenizer.Advance();
+                ProcessToken();
+            }
+
+            //'{' (Início do bloco de repetição)
+            _tokenizer.Advance();
+            ProcessToken();
+
+            // Chamada RECURSIVA para os comandos dentro do while
+            CompileStatements();
+
+            // '}' (Fim do bloco while)
+            ProcessToken();
+
+            _writer.WriteLine("</whileStatement>");
         }
     }
 }
