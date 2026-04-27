@@ -259,7 +259,7 @@ namespace JackCompiler.Modules
                 switch (_tokenizer.CurrentToken)
                 {
                     case "let": CompileLet(); break;
-                    //case "if": CompileIf(); break;
+                    case "if": CompileIf(); break;
                     //case "while": CompileWhile(); break;
                     case "do": CompileDo(); break;
                     case "return": CompileReturn(); break;
@@ -351,6 +351,56 @@ namespace JackCompiler.Modules
 
             ProcessToken(); // ';'
             _writer.WriteLine("</doStatement>");
+        }
+
+
+        public void CompileIf()
+        {
+            _writer.WriteLine("<ifStatement>");
+            
+            // Veriffica se há 'if'
+            ProcessToken();
+
+            // Busca '('
+            _tokenizer.Advance();
+            ProcessToken();
+
+            // Identifica a Condição (Expression)
+            while (_tokenizer.CurrentToken != ")")
+            {
+                _tokenizer.Advance();
+                ProcessToken();
+            }
+
+            // Verifica '{' (Início do bloco if)
+            _tokenizer.Advance();
+            ProcessToken();
+
+            // Chamada RECURSIVA para processar os comandos dentro do if
+            CompileStatements();
+
+            // '}' (Fim do bloco if)
+            ProcessToken();
+
+            // Tratamento do 'else'
+            _tokenizer.Advance();
+            if (_tokenizer.CurrentToken == "else")
+            {
+                ProcessToken(); // 'else'
+                
+                _tokenizer.Advance();
+                ProcessToken(); // '{'
+                
+                CompileStatements(); // Comandos dentro do else
+                
+                ProcessToken(); // '}'
+            }
+            else
+            {
+            
+            }
+
+            _writer.WriteLine("</ifStatement>");
         }
     }
 }
