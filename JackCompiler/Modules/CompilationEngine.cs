@@ -255,12 +255,13 @@ namespace JackCompiler.Modules
                 _tokenizer.CurrentToken == "while" || _tokenizer.CurrentToken == "do" || 
                 _tokenizer.CurrentToken == "return")
             {
+                // Chama o método específico para cada tipo de comando
                 switch (_tokenizer.CurrentToken)
                 {
                     case "let": CompileLet(); break;
-                    case "if": CompileIf(); break;
-                    case "while": CompileWhile(); break;
-                    case "do": CompileDo(); break;
+                    //case "if": CompileIf(); break;
+                    //case "while": CompileWhile(); break;
+                    //case "do": CompileDo(); break;
                     case "return": CompileReturn(); break;
                 }
                 

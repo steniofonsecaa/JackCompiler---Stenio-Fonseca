@@ -4,5 +4,7 @@ class Atributos {
     
     function void start() {
         var int i;
+        let i = 10;
+        return;
     }
 }

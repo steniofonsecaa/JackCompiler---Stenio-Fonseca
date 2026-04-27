@@ -32,6 +32,19 @@
 <identifier> i </identifier>
 <symbol> ; </symbol>
 </varDec>
+<statements>
+<letStatement>
+<keyword> let </keyword>
+<identifier> i </identifier>
+<symbol> = </symbol>
+<intConstant> 10 </intConstant>
+<symbol> ; </symbol>
+</letStatement>
+<returnStatement>
+<keyword> return </keyword>
+<symbol> ; </symbol>
+</returnStatement>
+</statements>
 <symbol> } </symbol>
 </subroutineBody>
 </subroutineDec>
