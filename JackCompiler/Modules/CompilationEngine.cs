@@ -60,30 +60,26 @@ namespace JackCompiler.Modules
             while (_tokenizer.HasMoreTokens())
             {
                 _tokenizer.Advance();
+                
+                // Remove espaços em branco para evitar erro de comparação
+                string token = _tokenizer.CurrentToken.Trim();
 
-                // Se achar '}', a classe acabou
-                if (_tokenizer.CurrentToken == "}") break;
+                if (token == "}") break;
 
-                // Se encontrar 'static' ou 'field', é chamado a regra específica de variáveis de classe
-                if (_tokenizer.CurrentToken == "static" || _tokenizer.CurrentToken == "field")
+                if (token == "static" || token == "field")
                 {
                     CompileClassVarDec(); 
                 }
-                // Se encontrar 'constructor', 'function' ou 'method', é chamado a regra específica de sub-rotinas
-                else if (_tokenizer.CurrentToken == "constructor" || 
-                        _tokenizer.CurrentToken == "function" || 
-                        _tokenizer.CurrentToken == "method")
+                else if (token == "constructor" || token == "function" || token == "method")
                 {
                     CompileSubroutine();
                 }
-                // Se encontrar 'var', e chamado a regra específica de variáveis
-                else if (_tokenizer.CurrentToken == "var")
+                else if (token == "var")
                 {
                     CompileVarDec(); 
                 }
                 else
                 {
-                    // Se não for var, sera processado normalmente
                     ProcessToken();
                 }
             }
@@ -168,10 +164,11 @@ namespace JackCompiler.Modules
         public void CompileSubroutine()
         {
             _writer.WriteLine("<subroutineDec>");
-            // Escreve 'function', 'method' ou 'constructor'
-            ProcessToken();
-
-            // Tipo de retorno (void, int, etc.)
+            
+            // Processa a palavra-chave da sub-rotina: constructor, function ou method
+            ProcessToken(); 
+            
+            // Tipo de retorno: void, tipo primitivo ou nome de classe
             _tokenizer.Advance();
             ProcessToken();
 
@@ -179,15 +176,16 @@ namespace JackCompiler.Modules
             _tokenizer.Advance();
             ProcessToken();
 
-            // Abre parênteses '('
+            // Busca o símbolo de abertura de parâmetros '('
             _tokenizer.Advance();
             ProcessToken();
 
-            // Chamada da lista de paramentros (mesmo que seja vazia)
             CompileParameterList();
-            ProcessToken(); // Fecha parênteses ')'
+            
+            // O CompileParameterList parou no ')', então apenas processamos ele
+            ProcessToken(); 
 
-            // Corpo da sub-rotina
+            // Chamada para compilar o corpo da sub-rotina, que inclui as variáveis locais e os comandos
             CompileSubroutineBody();
 
             _writer.WriteLine("</subroutineDec>");
