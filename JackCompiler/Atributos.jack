@@ -1,10 +1,6 @@
-class Atributos {
-    field int x, y;
-    static boolean isReady;
-    
-    function void start() {
-        var int i;
-        let i = 10;
-        return;
-    }
+function void start() {
+    var int i;
+    let i = 10;
+    do Output.printInt(i);
+    return;
 }

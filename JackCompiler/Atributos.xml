@@ -1,30 +1,9 @@
 <class>
-<keyword> class </keyword>
-<identifier> Atributos </identifier>
-<symbol> { </symbol>
-<classVarDec>
-<keyword> field </keyword>
-<keyword> int </keyword>
-<identifier> x </identifier>
-<symbol> , </symbol>
-<identifier> y </identifier>
-<symbol> ; </symbol>
-</classVarDec>
-<classVarDec>
-<keyword> static </keyword>
-<keyword> boolean </keyword>
-<identifier> isReady </identifier>
-<symbol> ; </symbol>
-</classVarDec>
-<subroutineDec>
 <keyword> function </keyword>
 <keyword> void </keyword>
 <identifier> start </identifier>
 <symbol> ( </symbol>
-<parameterList>
-</parameterList>
 <symbol> ) </symbol>
-<subroutineBody>
 <symbol> { </symbol>
 <varDec>
 <keyword> var </keyword>
@@ -32,21 +11,20 @@
 <identifier> i </identifier>
 <symbol> ; </symbol>
 </varDec>
-<statements>
-<letStatement>
 <keyword> let </keyword>
 <identifier> i </identifier>
 <symbol> = </symbol>
 <intConstant> 10 </intConstant>
 <symbol> ; </symbol>
-</letStatement>
-<returnStatement>
+<keyword> do </keyword>
+<identifier> Output </identifier>
+<symbol> . </symbol>
+<identifier> printInt </identifier>
+<symbol> ( </symbol>
+<identifier> i </identifier>
+<symbol> ) </symbol>
+<symbol> ; </symbol>
 <keyword> return </keyword>
 <symbol> ; </symbol>
-</returnStatement>
-</statements>
-<symbol> } </symbol>
-</subroutineBody>
-</subroutineDec>
 <symbol> } </symbol>
 </class>

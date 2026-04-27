@@ -261,7 +261,7 @@ namespace JackCompiler.Modules
                     case "let": CompileLet(); break;
                     //case "if": CompileIf(); break;
                     //case "while": CompileWhile(); break;
-                    //case "do": CompileDo(); break;
+                    case "do": CompileDo(); break;
                     case "return": CompileReturn(); break;
                 }
                 
@@ -332,6 +332,25 @@ namespace JackCompiler.Modules
             ProcessToken();
 
             _writer.WriteLine("</letStatement>");
+        }
+
+        // Método para compilar um comando de do
+        public void CompileDo()
+        {
+            _writer.WriteLine("<doStatement>");
+            ProcessToken(); // 'do'
+
+            // No Jack, após o 'do' vem uma chamada de função
+            // Processar os tokens até o ';'
+            while (_tokenizer.CurrentToken != ";")
+            {
+                _tokenizer.Advance();
+                if (_tokenizer.CurrentToken == ";") break;
+                ProcessToken();
+            }
+
+            ProcessToken(); // ';'
+            _writer.WriteLine("</doStatement>");
         }
     }
 }
