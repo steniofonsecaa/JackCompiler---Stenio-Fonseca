@@ -233,7 +233,10 @@ namespace JackCompiler.Modules
                 }
                 else
                 {
-                    ProcessToken();
+                    // Se não é var nem }, começam os statements!
+                    CompileStatements();
+                    // O CompileStatements para no '}', então saímos do loop
+                    if (_tokenizer.CurrentToken == "}") break;
                 }
             }
             
