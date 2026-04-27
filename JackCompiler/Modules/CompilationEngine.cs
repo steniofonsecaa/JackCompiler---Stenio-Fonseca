@@ -288,5 +288,49 @@ namespace JackCompiler.Modules
             ProcessToken(); // simbolo ';'
             _writer.WriteLine("</returnStatement>");
         }
+
+        // Método para compilar um comando de let, seguindo a estrutura da gramática do Jack
+        public void CompileLet()
+        {
+            _writer.WriteLine("<letStatement>");
+            
+            // Processa 'let'
+            ProcessToken();
+
+            // Verificamos varName
+            _tokenizer.Advance();
+            ProcessToken();
+
+            // Verificamos se é um array: '[' expression ']'
+            _tokenizer.Advance();
+            if (_tokenizer.CurrentToken == "[")
+            {
+                ProcessToken(); // '['
+                
+                // Desenvolvimento
+                _tokenizer.Advance();
+                ProcessToken(); // Índice ou variável
+                
+                _tokenizer.Advance();
+                ProcessToken(); // ']'
+                _tokenizer.Advance();
+            }
+
+            // Busca '='
+            ProcessToken();
+
+            // Expression para o valor a ser atribuído
+            while (_tokenizer.CurrentToken != ";")
+            {
+                _tokenizer.Advance();
+                if (_tokenizer.CurrentToken == ";") break;
+                ProcessToken();
+            }
+
+            // Adiciona ';'
+            ProcessToken();
+
+            _writer.WriteLine("</letStatement>");
+        }
     }
 }
