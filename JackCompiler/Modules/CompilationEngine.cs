@@ -57,32 +57,27 @@ namespace JackCompiler.Modules
             _tokenizer.Advance();
             ProcessToken();
 
-            while (_tokenizer.HasMoreTokens())
+            // Avança para o primeiro membro da classe
+            _tokenizer.Advance();
+            string token = _tokenizer.CurrentToken.Trim();
+
+            while (token != "}")
             {
-                _tokenizer.Advance();
-                
-                // Remove espaços em branco para evitar erro de comparação
-                string token = _tokenizer.CurrentToken.Trim();
-
-                if (token == "}") break;
-
                 if (token == "static" || token == "field")
-                {
-                    CompileClassVarDec(); 
-                }
+                    CompileClassVarDec();
                 else if (token == "constructor" || token == "function" || token == "method")
-                {
                     CompileSubroutine();
-                }
                 else if (token == "var")
-                {
-                    CompileVarDec(); 
-                }
+                    CompileVarDec();
                 else
                 {
                     ProcessToken();
+                    _tokenizer.Advance();
                 }
+
+                token = _tokenizer.CurrentToken.Trim(); // Todos os Compile* já avançaram
             }
+
 
             ProcessToken(); // Escreve o '}' final
             _writer.WriteLine("</class>");
@@ -120,7 +115,7 @@ namespace JackCompiler.Modules
 
             // Escreve o ';'
             ProcessToken();
-    
+            _tokenizer.Advance();
             _writer.WriteLine("</varDec>");
         }
 
@@ -156,7 +151,7 @@ namespace JackCompiler.Modules
 
             // Finaliza a declaração com ';'
             ProcessToken();
-
+            _tokenizer.Advance();
             _writer.WriteLine("</classVarDec>");
         }
 
@@ -216,30 +211,40 @@ namespace JackCompiler.Modules
             _tokenizer.Advance();
             ProcessToken();
 
+            _tokenizer.Advance();
             // Enquanto houver variáveis locais 'var', chama CompileVarDec
-            while (_tokenizer.HasMoreTokens())
+            while (_tokenizer.CurrentToken == "var")
             {
-                _tokenizer.Advance();
+                //_tokenizer.Advance();
+                CompileVarDec();
+                //_tokenizer.Advance();
                 
-                if (_tokenizer.CurrentToken == "var")
-                {
-                    CompileVarDec();
-                }
-                else if (_tokenizer.CurrentToken == "}")
-                {
-                    break;
-                }
-                else
-                {
-                    // Se não é var nem }, começam os statements!
-                    CompileStatements();
-                    // O CompileStatements para no '}', então saímos do loop
-                    if (_tokenizer.CurrentToken == "}") break;
-                }
+                //if (_tokenizer.CurrentToken == "var")
+                //{
+                //    CompileVarDec();
+                //}
+                //else if (_tokenizer.CurrentToken == "}")
+                //{
+                //    break;
+                //}
+                //else
+                //{
+                //    // Se não é var nem }, começam os statements!
+                //    CompileStatements();
+                //    // O CompileStatements para no '}', então saímos do loop
+                //    if (_tokenizer.CurrentToken == "}") break;
+                //}
+            }
+
+            // O token atual e o primeiro statement ou '}'
+            if (_tokenizer.CurrentToken != "}")
+            {
+                CompileStatements();
             }
             
             // Fecha chave '}'
             ProcessToken();
+            _tokenizer.Advance();
             _writer.WriteLine("</subroutineBody>");
         }
 
@@ -261,11 +266,11 @@ namespace JackCompiler.Modules
                 else break; // Se não for nenhum comando, sai do loop (provavelmente achou '}')
 
                 // Após processar um comando, precisamos avançar para ver o próximo
-                if (_tokenizer.HasMoreTokens()) 
-                {
-                    _tokenizer.Advance();
-                }
-                else break;
+                //if (_tokenizer.HasMoreTokens()) 
+                //{
+                //    _tokenizer.Advance();
+                //}
+                //else break;
             }
 
             _writer.WriteLine("</statements>");
@@ -286,6 +291,7 @@ namespace JackCompiler.Modules
             }
 
             ProcessToken(); // simbolo ';'
+            _tokenizer.Advance();
             _writer.WriteLine("</returnStatement>");
         }
 
@@ -318,17 +324,18 @@ namespace JackCompiler.Modules
 
             // Busca '='
             ProcessToken();
-
+            _tokenizer.Advance();
             // Expression para o valor a ser atribuído
             while (_tokenizer.CurrentToken != ";")
             {
-                _tokenizer.Advance();
-                if (_tokenizer.CurrentToken == ";") break;
+                //if (_tokenizer.CurrentToken == ";") break;
                 ProcessToken();
+                _tokenizer.Advance();
             }
 
             // Adiciona ';'
             ProcessToken();
+            _tokenizer.Advance();
 
             _writer.WriteLine("</letStatement>");
         }
@@ -341,14 +348,16 @@ namespace JackCompiler.Modules
 
             // No Jack, após o 'do' vem uma chamada de função
             // Processar os tokens até o ';'
+            _tokenizer.Advance();
             while (_tokenizer.CurrentToken != ";")
             {
-                _tokenizer.Advance();
-                if (_tokenizer.CurrentToken == ";") break;
+                //if (_tokenizer.CurrentToken == ";") break;
                 ProcessToken();
+                _tokenizer.Advance();
             }
 
             ProcessToken(); // ';'
+            _tokenizer.Advance();
             _writer.WriteLine("</doStatement>");
         }
 
@@ -365,24 +374,27 @@ namespace JackCompiler.Modules
             ProcessToken();
 
             // Identifica a Condição (Expression)
+            _tokenizer.Advance();
             while (_tokenizer.CurrentToken != ")")
             {
-                _tokenizer.Advance();
                 ProcessToken();
+                _tokenizer.Advance();
             }
+            ProcessToken(); // Para processar o ')'
 
             // Verifica '{' (Início do bloco if)
             _tokenizer.Advance();
             ProcessToken();
 
             // Chamada RECURSIVA para processar os comandos dentro do if
+            _tokenizer.Advance();
             CompileStatements();
 
             // '}' (Fim do bloco if)
             ProcessToken();
+            _tokenizer.Advance();
 
             // Tratamento do 'else'
-            _tokenizer.Advance();
             if (_tokenizer.CurrentToken == "else")
             {
                 ProcessToken(); // 'else'
@@ -390,13 +402,11 @@ namespace JackCompiler.Modules
                 _tokenizer.Advance();
                 ProcessToken(); // '{'
                 
+                _tokenizer.Advance();
                 CompileStatements(); // Comandos dentro do else
                 
                 ProcessToken(); // '}'
-            }
-            else
-            {
-            
+                _tokenizer.Advance();
             }
 
             _writer.WriteLine("</ifStatement>");
@@ -416,21 +426,25 @@ namespace JackCompiler.Modules
 
             // Avalia Condição (Expression)
             // Avançamos até fechar o parêntese da condição
+            _tokenizer.Advance();
             while (_tokenizer.CurrentToken != ")")
             {
-                _tokenizer.Advance();
                 ProcessToken();
+                _tokenizer.Advance();
             }
 
+            ProcessToken(); // Para processar o ')' 
             //'{' (Início do bloco de repetição)
             _tokenizer.Advance();
             ProcessToken();
 
             // Chamada RECURSIVA para os comandos dentro do while
+            _tokenizer.Advance();
             CompileStatements();
 
             // '}' (Fim do bloco while)
             ProcessToken();
+            _tokenizer.Advance();
 
             _writer.WriteLine("</whileStatement>");
         }
