@@ -4,7 +4,7 @@ Este projeto consiste no desenvolvimento de um Analisador Lexico Analisador Sint
 
 ## Grupo
 * **Nome**: Stenio Moraes Fonseca
-* **Matrícula**: 2025
+* **Matrícula**: 20250013686
 
 ## Linguagem Utilizada
 * **C#** 
