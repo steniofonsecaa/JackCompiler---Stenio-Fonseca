@@ -1,29 +1,28 @@
 using JackCompiler.Enums;
+using System;
 
 namespace JackCompiler.Modules
 {
     public class CompilationEngine
     {
         private JackTokenizer _tokenizer;
-        private StreamWriter _writer;
+        private VMWriter _vmWriter;
+        private SymbolTable _symbolTable;
+        //private StreamWriter _writer;
+        private string _className; // Para armazenar o nome da classe atual, útil para gerar código VM
 
-        // Metodo construtor que recebe o tokenizer e o caminho do arquivo de saída para inicializar o StreamWriter
+        // Metodo construtor que agora inicializa o VMWriter e o SymbolTable
         public CompilationEngine(JackTokenizer tokenizer, string outputPath)
-        {
+        {   
             _tokenizer = tokenizer;
-            _writer = new StreamWriter(outputPath);
+            _vmWriter = new VMWriter(outputPath);
+            _symbolTable = new SymbolTable();
         }
 
-        // Fecha o StreamWriter para garantir que o arquivo seja salvo corretamente
-        public void Close() => _writer.Close();
+        // Metodo Close para fechar o VMWriter e liberar recursos
+        public void Close() => _vmWriter.Close();
 
-        // Escreve uma tag XML formatada no arquivo de saída
-        private void WriteTag(string tag, string value)
-        {
-            _writer.WriteLine($"<{tag}> {value} </{tag}>");
-        }
-
-        // Processa o token atual do tokenizer e escreve a tag XML correspondente
+        // ProcessToken
         private void ProcessToken()
         {
             var type = _tokenizer.GetTokenType();
@@ -36,8 +35,6 @@ namespace JackCompiler.Modules
             else if (valor == ">") valor = "&gt;";
             else if (valor == "&") valor = "&amp;";
             else if (valor == "\"") valor = "&quot;";
-
-            _writer.WriteLine($"<{tag}> {valor} </{tag}>");
         }
 
         // Método para compilar uma classe, seguindo a estrutura da gramática do Jack   
