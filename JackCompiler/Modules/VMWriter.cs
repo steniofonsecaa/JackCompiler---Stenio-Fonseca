@@ -14,4 +14,9 @@ namespace JackCompiler.Modules
     {
         ADD, SUB, NEG, EQ, GT, LT, AND, OR, NOT
     }
+
+    public class VMWriter
+    {
+        
+    }
 }
