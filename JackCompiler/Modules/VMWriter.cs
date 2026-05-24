@@ -15,8 +15,14 @@ namespace JackCompiler.Modules
         ADD, SUB, NEG, EQ, GT, LT, AND, OR, NOT
     }
 
-    public class VMWriter
+    public class VMWriter   
     {
+        private StreamWriter _writer;
         
+        // Construtor que recebe o caminho do arquivo de saída (.vm) e inicializa o StreamWriter
+        public VMWriter(string outputPath)
+        {
+            _writer = new StreamWriter(outputPath);
+        }
     }
 }
