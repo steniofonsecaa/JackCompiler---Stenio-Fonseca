@@ -37,47 +37,39 @@ namespace JackCompiler.Modules
             else if (valor == "\"") valor = "&quot;";
         }
 
-        // Método para compilar uma classe, seguindo a estrutura da gramática do Jack   
+        // Método para compilar uma classe, para nao escrever XML e salvar o nome da classe  
         public void CompileClass()
         {
-            _writer.WriteLine("<class>");
-            
-            // 1. 'class'
-            _tokenizer.Advance();
+            _tokenizer.Advance(); // 'class'
             ProcessToken();
 
-            // 2. className
-            _tokenizer.Advance();
+            _tokenizer.Advance(); // className
+            _className = _tokenizer.CurrentToken; // Salva o nome da classe para uso futuro
             ProcessToken();
 
-            // 3. '{'
-            _tokenizer.Advance();
+            _tokenizer.Advance(); // '{'
             ProcessToken();
 
-            // Avança para o primeiro membro da classe
-            _tokenizer.Advance();
-            string token = _tokenizer.CurrentToken.Trim();
-
-            while (token != "}")
+            while (_tokenizer.HasMoreTokens())
             {
+                _tokenizer.Advance();
+                string token = _tokenizer.CurrentToken.Trim();
+
+                if (token == "}") break;
+
                 if (token == "static" || token == "field")
-                    CompileClassVarDec();
+                {
+                    CompileClassVarDec(); 
+                }
                 else if (token == "constructor" || token == "function" || token == "method")
-                    CompileSubroutine();
-                else if (token == "var")
-                    CompileVarDec();
+                {
+                    CompileSubroutine(); 
+                }
                 else
                 {
                     ProcessToken();
-                    _tokenizer.Advance();
                 }
-
-                token = _tokenizer.CurrentToken.Trim(); // Todos os Compile* já avançaram
             }
-
-
-            ProcessToken(); // Escreve o '}' final
-            _writer.WriteLine("</class>");
         }
 
         // Método para compilar variáveis locais dentro de sub-rotinas, seguindo a estrutura da gramática do Jack
