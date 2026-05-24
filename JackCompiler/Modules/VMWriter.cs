@@ -72,5 +72,17 @@ namespace JackCompiler.Modules
         {
             _writer.WriteLine($"function {functionName} {numLocals}");
         }
+
+        // Escreve um comando de retorno no arquivo .vm
+        public void WriteReturn()
+        {
+            _writer.WriteLine("return");
+        }
+
+        // Fecha o arquivo .vm, garantindo que todos os dados sejam gravados corretamente
+        public void Close()
+        {
+            _writer.Close();
+        }
     }
 }
