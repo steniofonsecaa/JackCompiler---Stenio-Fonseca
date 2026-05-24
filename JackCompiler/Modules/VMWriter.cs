@@ -24,5 +24,19 @@ namespace JackCompiler.Modules
         {
             _writer = new StreamWriter(outputPath);
         }
+
+        // Escreve um comando de push no arquivo .vm
+        public void WritePush(Segment segment, int index)
+        {
+            _writer.WriteLine($"push {SegmentToString(segment)} {index}");
+        }   
+
+        // Escreve um comando de pop no arquivo .vm
+        public void WritePop(Segment segment, int index)
+        {
+            _writer.WriteLine($"pop {SegmentToString(segment)} {index}");
+        }
+
+        
     }
 }
