@@ -1,4 +1,7 @@
-﻿using JackCompiler.Modules;
+﻿using System;
+using System.IO;
+using System.Collections.Generic;
+using JackCompiler.Modules;
 
 if (args.Length == 0)
 {
@@ -6,62 +9,57 @@ if (args.Length == 0)
     return;
 }
 
-//var tokenizer = new JackTokenizer(args[0]);
 string inputPath = args[0];
+List<string> jackFiles = new List<string>();
 
-if (!File.Exists(inputPath))
+// Verifica se a entrada é um diretório ou um arquivo único
+if (Directory.Exists(inputPath))
 {
-    Console.WriteLine($"Erro: Arquivo não encontrado em {inputPath}");
+    // Pega todos os arquivos .jack dentro do diretório
+    jackFiles.AddRange(Directory.GetFiles(inputPath, "*.jack", SearchOption.AllDirectories));
+}
+else if (File.Exists(inputPath) && inputPath.EndsWith(".jack"))
+{
+    // É um arquivo único
+    jackFiles.Add(inputPath);
+}
+else
+{
+    Console.WriteLine($"Erro: Caminho inválido ou arquivo não encontrado: {inputPath}");
     return;
 }
 
-try
+if (jackFiles.Count == 0)
 {
-    // Inicializa o Tokenizer com o ficheiro .jack
-    var tokenizer = new JackTokenizer(inputPath);
-    
-    // Define o nome do ficheiro de saída (sem o 'T' agora, pois é a estrutura completa)
-    string xmlOutput = inputPath.Replace(".jack", ".xml");
-    
-    // Cria a Engine e inicia a compilação pela regra principal: Class
-    Console.WriteLine("--- REALIZANDO ANÁLISE SINTÁTICA ---");
-    var engine = new CompilationEngine(tokenizer, xmlOutput);
-    
-    engine.CompileClass();
-    
-    // Fecha o arquivo de saída
-    engine.Close();
-    
-    Console.WriteLine($"\nAnálise concluída com sucesso! Ficheiro gerado: {xmlOutput}");
-}
-catch (Exception ex)
-{
-    Console.WriteLine($"Erro durante a análise sintática: {ex.Message}");
+    Console.WriteLine("Aviso: Nenhum arquivo .jack encontrado no caminho especificado.");
+    return;
 }
 
-// Processamento do arquivo .jack e geração do arquivo XML de tokens
-//try
-//{
-//    var tokenizer = new JackTokenizer(inputPath);
-//    string outputPath = inputPath.Replace(".jack", "T.xml");
-    
-//    using (StreamWriter writer = new StreamWriter(outputPath))
-//    {
-//        writer.WriteLine("<tokens>");
-        
-//        while (tokenizer.HasMoreTokens())
-//        {
-//            tokenizer.Advance();
-//            // Escreve a tag XML no arquivo
-//            writer.WriteLine(tokenizer.GetTokenTag());
-//        }
-        
-//       writer.WriteLine("</tokens>");
-//    }
+Console.WriteLine($"--- INICIANDO COMPILAÇÃO ({jackFiles.Count} arquivo(s)) ---");
 
-//    Console.WriteLine($"\nSucesso! Arquivo XML gerado em: {outputPath}");
-//}
-//catch (Exception ex)
-//{
-//    Console.WriteLine($"Erro fatal: {ex.Message}");
-//}
+// Compila cada arquivo encontrado
+foreach (string file in jackFiles)
+{
+    try
+    {
+        var tokenizer = new JackTokenizer(file);
+        
+        // Saida do arquivo .vm (mesmo nome do .jack, mas com extensão .vm)
+        string vmOutput = file.Replace(".jack", ".vm"); 
+        
+        // Cria o motor de compilação e inicia a compilação
+        // O CompilationEngine é responsável por gerar o código VM a partir dos tokens do JackTokenizer
+        var engine = new CompilationEngine(tokenizer, vmOutput);
+        
+        engine.CompileClass();
+        engine.Close();
+        
+        Console.WriteLine($"[OK] {Path.GetFileName(file)} -> {Path.GetFileName(vmOutput)}");
+    }
+    catch (Exception ex)
+    {
+        Console.WriteLine($"[ERRO] Falha ao compilar {Path.GetFileName(file)}: {ex.Message}");
+    }
+}
+
+Console.WriteLine("\n--- COMPILAÇÃO CONCLUÍDA COM SUCESSO ---");

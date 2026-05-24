@@ -217,23 +217,6 @@ namespace JackCompiler.Modules
             {
                 //_tokenizer.Advance();
                 CompileVarDec();
-                //_tokenizer.Advance();
-                
-                //if (_tokenizer.CurrentToken == "var")
-                //{
-                //    CompileVarDec();
-                //}
-                //else if (_tokenizer.CurrentToken == "}")
-                //{
-                //    break;
-                //}
-                //else
-                //{
-                //    // Se não é var nem }, começam os statements!
-                //    CompileStatements();
-                //    // O CompileStatements para no '}', então saímos do loop
-                //    if (_tokenizer.CurrentToken == "}") break;
-                //}
             }
 
             // O token atual e o primeiro statement ou '}'
