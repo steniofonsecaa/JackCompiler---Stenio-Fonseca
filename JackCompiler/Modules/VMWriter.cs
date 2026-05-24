@@ -8,4 +8,10 @@ namespace JackCompiler.Modules
     {
         CONST, ARG, LOCAL, STATIC, THIS, THAT, POINTER, TEMP
     }
+
+    // Enum para os comandos aritméticos usados na linguagem VM
+    public enum Command
+    {
+        ADD, SUB, NEG, EQ, GT, LT, AND, OR, NOT
+    }
 }
