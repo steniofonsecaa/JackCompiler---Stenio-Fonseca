@@ -37,6 +37,16 @@ namespace JackCompiler.Modules
             _writer.WriteLine($"pop {SegmentToString(segment)} {index}");
         }
 
-        
+        // Escreve um comando aritmético no arquivo .vm
+        public void WriteArithmetic(Command command)
+        {
+            _writer.WriteLine(command.ToString().ToLower());
+        }
+
+        // Escreve um comando de label no arquivo .vm
+        public void WriteLabel(string label)
+        {
+            _writer.WriteLine($"label {label}");
+        }
     }
 }
