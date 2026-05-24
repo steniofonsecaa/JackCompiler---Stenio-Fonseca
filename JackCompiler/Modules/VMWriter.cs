@@ -48,5 +48,17 @@ namespace JackCompiler.Modules
         {
             _writer.WriteLine($"label {label}");
         }
+
+        // Escreve um comando de goto (desvio incondicional) no arquivo .vm
+        public void WriteGoto(string label)
+        {
+            _writer.WriteLine($"goto {label}");
+        }
+
+        // Escreve um comando de if-goto (desvio condicional) no arquivo .vm
+        public void WriteIf(string label)
+        {
+            _writer.WriteLine($"if-goto {label}");
+        }
     }
 }
