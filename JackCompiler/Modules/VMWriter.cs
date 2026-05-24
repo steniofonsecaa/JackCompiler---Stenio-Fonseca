@@ -84,5 +84,22 @@ namespace JackCompiler.Modules
         {
             _writer.Close();
         }
+
+        // Helper para converter o enum Segment em sua representação de string usada na linguagem VM
+        private string SegmentToString(Segment segment)
+        {
+            switch (segment)
+            {
+                case Segment.CONST: return "constant";
+                case Segment.ARG: return "argument";
+                case Segment.LOCAL: return "local";
+                case Segment.STATIC: return "static";
+                case Segment.THIS: return "this";
+                case Segment.THAT: return "that";
+                case Segment.POINTER: return "pointer";
+                case Segment.TEMP: return "temp";
+                default: throw new ArgumentException("Segmento desconhecido");
+            }
+        }
     }
 }
