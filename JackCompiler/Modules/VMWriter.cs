@@ -60,5 +60,17 @@ namespace JackCompiler.Modules
         {
             _writer.WriteLine($"if-goto {label}");
         }
+
+        // Escreve um comando de chamada de função no arquivo .vm
+        public void WriteCall(string functionName, int numArgs)
+        {
+            _writer.WriteLine($"call {functionName} {numArgs}");
+        }
+
+        // Escreve um comando de definição de função no arquivo .vm
+        public void WriteFunction(string functionName, int numLocals)
+        {
+            _writer.WriteLine($"function {functionName} {numLocals}");
+        }
     }
 }
