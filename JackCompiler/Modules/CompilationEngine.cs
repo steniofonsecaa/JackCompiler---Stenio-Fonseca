@@ -72,23 +72,26 @@ namespace JackCompiler.Modules
             }
         }
 
-        // Método para compilar variáveis locais dentro de sub-rotinas, seguindo a estrutura da gramática do Jack
+        // Método para escrever a declaração de variáveis locais, seguindo a estrutura da gramática do Jack
         public void CompileVarDec()
         {
-            _writer.WriteLine("<varDec>");
+            ProcessToken(); // 'var'
+            VarKind kind = VarKind.VAR; // No Jack, 'var' significa variável local
+
+            // Tipo
+            _tokenizer.Advance();
+            string type = _tokenizer.CurrentToken;
+            ProcessToken();
+
+            // Nome
+            _tokenizer.Advance();
+            string name = _tokenizer.CurrentToken;
             
-            // Processa a palavra-chave 'var'
-            ProcessToken(); 
-
-            // Tipo (int, char, boolean ou className)
-            _tokenizer.Advance();
+            // Registra a variável na tabela de símbolos, associando o nome, tipo e kind (local)
+            _symbolTable.Define(name, type, kind);
             ProcessToken();
 
-            // Nome da variável
-            _tokenizer.Advance();
-            ProcessToken();
-
-            // Suporte para múltiplas variáveis declaradas na mesma linha (ex: var int x, y, z;)
+            // Múltiplas variáveis (ex: var int i, j, k;)
             while (_tokenizer.HasMoreTokens())
             {
                 _tokenizer.Advance();
@@ -96,32 +99,38 @@ namespace JackCompiler.Modules
                 
                 if (_tokenizer.CurrentToken == ",")
                 {
-                    ProcessToken(); // Escreve a vírgula
+                    ProcessToken(); // vírgula
+                    
                     _tokenizer.Advance();
-                    ProcessToken(); // Escreve o próximo nome
+                    name = _tokenizer.CurrentToken;
+                    
+                    _symbolTable.Define(name, type, kind);
+                    ProcessToken();
                 }
             }
 
-            // Escreve o ';'
-            ProcessToken();
-            _tokenizer.Advance();
-            _writer.WriteLine("</varDec>");
+            ProcessToken(); // Processa ';'
         }
 
-        // Metodo para compilar variáveis de classe (static ou field), seguindo a estrutura da gramática do Jack
+        // Metodo para compilar as declarações de variáveis de classe (static ou field), seguindo a estrutura da gramática do Jack
         public void CompileClassVarDec()
         {
-            _writer.WriteLine("<classVarDec>");
+            // Identifica se é STATIC ou FIELD
+            string keyword = _tokenizer.CurrentToken; // 'static' ou 'field'
+            VarKind kind = keyword == "static" ? VarKind.STATIC : VarKind.FIELD;
+            ProcessToken();
+
+            // Identifica o TIPO (int, char, boolean ou nome da classe)
+            _tokenizer.Advance();
+            string type = _tokenizer.CurrentToken;
+            ProcessToken();
+
+            // Identifica o NOME da variável
+            _tokenizer.Advance();
+            string name = _tokenizer.CurrentToken;
             
-            // Processa 'static' ou 'field'
-            ProcessToken();
-
-            // Tipo (int, char, boolean ou className)
-            _tokenizer.Advance();
-            ProcessToken();
-
-            // Apresenta o nome da variável
-            _tokenizer.Advance();
+            // Guarda a variável na tabela de símbolos, associando o nome, tipo e kind (static ou field)
+            _symbolTable.Define(name, type, kind);
             ProcessToken();
 
             // Tratamento para múltiplas variáveis na mesma linha: static int x, y;
@@ -132,16 +141,18 @@ namespace JackCompiler.Modules
                 
                 if (_tokenizer.CurrentToken == ",")
                 {
-                    ProcessToken(); // Para escrever a vírgula
+                    ProcessToken(); // Processa a vírgula
+                    
                     _tokenizer.Advance();
-                    ProcessToken(); // Para escrever o próximo nome
+                    name = _tokenizer.CurrentToken; // Pega o próximo nome
+                    
+                    // Guarda a variável na tabela de símbolos
+                    _symbolTable.Define(name, type, kind);
+                    ProcessToken();
                 }
             }
 
-            // Finaliza a declaração com ';'
-            ProcessToken();
-            _tokenizer.Advance();
-            _writer.WriteLine("</classVarDec>");
+            ProcessToken(); // Processa o ';'
         }
 
         // Metodo para compilar sub-rotinas (constructor, function ou method), seguindo a estrutura da gramática do Jack
