@@ -158,77 +158,125 @@ namespace JackCompiler.Modules
         // Metodo para compilar sub-rotinas (constructor, function ou method), seguindo a estrutura da gramática do Jack
         public void CompileSubroutine()
         {
-            _writer.WriteLine("<subroutineDec>");
-            
-            // Processa a palavra-chave da sub-rotina: constructor, function ou method
+            // Limpa a tabela de símbolos para a nova sub-rotina
+            _symbolTable.StartSubroutine();
+
+            ProcessToken(); // 'constructor', 'function' ou 'method'
+            string subroutineType = _tokenizer.CurrentToken; // Guardamos o tipo
+
+            // Se for um método, o argumento 0 é a própria instância (this)
+            if (subroutineType == "method")
+            {
+                _symbolTable.Define("this", _className, VarKind.ARG);
+            }
+
+            _tokenizer.Advance();
+            ProcessToken(); // Tipo de retorno (void, int, etc.)
+
+            _tokenizer.Advance();
+            string subroutineName = _tokenizer.CurrentToken; // Nome da função
             ProcessToken(); 
-            
-            // Tipo de retorno: void, tipo primitivo ou nome de classe
-            _tokenizer.Advance();
-            ProcessToken();
 
-            // Nome da sub-rotina
             _tokenizer.Advance();
-            ProcessToken();
-
-            // Busca o símbolo de abertura de parâmetros '('
-            _tokenizer.Advance();
-            ProcessToken();
+            ProcessToken(); // '('
 
             CompileParameterList();
             
-            // O CompileParameterList parou no ')', então apenas processamos ele
-            ProcessToken(); 
+            // O CompileParameterList já para no ')'
+            ProcessToken(); // ')'
 
-            // Chamada para compilar o corpo da sub-rotina, que inclui as variáveis locais e os comandos
-            CompileSubroutineBody();
-
-            _writer.WriteLine("</subroutineDec>");
+            // Compilaçao do corpo da sub-rotina, passando o nome e tipo para gerar código VM específico
+            CompileSubroutineBody(subroutineName, subroutineType);
         }
         
         // Metodo para compilar a lista de parâmetros de uma sub-rotina, seguindo a estrutura da gramática do Jack
         public void CompileParameterList()
         {
-            _writer.WriteLine("<parameterList>");
             _tokenizer.Advance();
             
-            // Enquanto não encontrar o fecha parênteses, processa os tipos e nomes
-            while (_tokenizer.CurrentToken != ")")
-            {
-                ProcessToken(); // Tipo ou Vírgula
-                _tokenizer.Advance();
-            }
+            // Se o token for ')', a lista está vazia
+            if (_tokenizer.CurrentToken == ")") return;
 
-            _writer.WriteLine("</parameterList>");
+            // 1º Parâmetro
+            string type = _tokenizer.CurrentToken;
+            ProcessToken(); // Tipo
+
+            _tokenizer.Advance();
+            string name = _tokenizer.CurrentToken;
+            
+            // Regista na tabela como argumento (ARG)
+            _symbolTable.Define(name, type, VarKind.ARG);
+            ProcessToken(); // Nome
+
+            // Parâmetros adicionais separados por vírgula
+            while (_tokenizer.HasMoreTokens())
+            {
+                _tokenizer.Advance();
+                if (_tokenizer.CurrentToken != ",") break;
+                
+                ProcessToken(); // Vírgula
+                
+                _tokenizer.Advance();
+                type = _tokenizer.CurrentToken;
+                ProcessToken(); // Tipo
+                
+                _tokenizer.Advance();
+                name = _tokenizer.CurrentToken;
+                
+                _symbolTable.Define(name, type, VarKind.ARG);
+                ProcessToken(); // Nome
+            }
         }
 
         // Metodo para compilar o corpo de uma sub-rotina, seguindo a estrutura da gramática do Jack
-        private void CompileSubroutineBody()
+        private void CompileSubroutineBody(string subroutineName, string subroutineType)
         {
-            _writer.WriteLine("<subroutineBody>");
-            
-            // Abre chave '{'
-            _tokenizer.Advance();
-            ProcessToken();
+            _tokenizer.Advance(); 
+            ProcessToken(); // '{'
 
-            _tokenizer.Advance();
-            // Enquanto houver variáveis locais 'var', chama CompileVarDec
-            while (_tokenizer.CurrentToken == "var")
+            // Processa TODAS as variáveis locais primeiro
+            while (_tokenizer.HasMoreTokens())
             {
-                //_tokenizer.Advance();
-                CompileVarDec();
+                _tokenizer.Advance();
+                if (_tokenizer.CurrentToken == "var")
+                {
+                    CompileVarDec();
+                }
+                else
+                {
+                    break; // Se não for 'var', saímos do loop e partimos para os statements
+                }
             }
 
-            // O token atual e o primeiro statement ou '}'
+            // Processo de todas as variáveis locais
+            int nLocals = _symbolTable.VarCount(VarKind.VAR);
+
+            // Escreve a instrução de função no VM
+            _vmWriter.WriteFunction($"{_className}.{subroutineName}", nLocals);
+
+            // Configurações especiais para 'method' e 'constructor'
+            if (subroutineType == "method")
+            {
+                // Um método precisa de carregar o 'this' (argumento 0) para o ponteiro base
+                _vmWriter.WritePush(Segment.ARG, 0);
+                _vmWriter.WritePop(Segment.POINTER, 0);
+            }
+            else if (subroutineType == "constructor")
+            {
+                // Um construtor precisa de alocar memória para os 'fields'
+                int nFields = _symbolTable.VarCount(VarKind.FIELD);
+                _vmWriter.WritePush(Segment.CONST, nFields);
+                _vmWriter.WriteCall("Memory.alloc", 1);
+                _vmWriter.WritePop(Segment.POINTER, 0);
+            }
+
+            // Processa os Statements (comandos)
             if (_tokenizer.CurrentToken != "}")
             {
                 CompileStatements();
             }
-            
-            // Fecha chave '}'
-            ProcessToken();
-            _tokenizer.Advance();
-            _writer.WriteLine("</subroutineBody>");
+
+            ProcessToken(); // '}'
         }
 
         // Metodo para compilar os comandos dentro do corpo de uma sub-rotina, seguindo a estrutura da gramática do Jack
