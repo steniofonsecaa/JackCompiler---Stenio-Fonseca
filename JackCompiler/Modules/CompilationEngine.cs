@@ -364,7 +364,7 @@ namespace JackCompiler.Modules
                 _vmWriter.WritePush(seg, index);
                 _tokenizer.Advance();
             }
-            
+
         }
 
         // Método para compilar um comando de retorno, seguindo a estrutura da gramática do Jack
@@ -392,69 +392,102 @@ namespace JackCompiler.Modules
         // Método para compilar um comando de let, seguindo a estrutura da gramática do Jack
         public void CompileLet()
         {
-            _writer.WriteLine("<letStatement>");
-            
-            // Processa 'let'
-            ProcessToken();
+            ProcessToken(); // 'let'
 
-            // Verificamos varName
             _tokenizer.Advance();
-            ProcessToken();
+            string varName = _tokenizer.CurrentToken; // Nome da variável
+            ProcessToken(); 
 
-            // Verificamos se é um array: '[' expression ']'
+            bool isArray = false;
             _tokenizer.Advance();
+
+            // Verifica se é uma atribuição de array
             if (_tokenizer.CurrentToken == "[")
             {
-                ProcessToken(); // '['
-                
-                // Desenvolvimento
-                _tokenizer.Advance();
-                ProcessToken(); // Índice ou variável
+                isArray = true;
+                ProcessToken();
                 
                 _tokenizer.Advance();
-                ProcessToken(); // ']'
-                _tokenizer.Advance();
-            }
-
-            // Busca '='
-            ProcessToken();
-            _tokenizer.Advance();
-            // Expression para o valor a ser atribuído
-            while (_tokenizer.CurrentToken != ";")
-            {
-                //if (_tokenizer.CurrentToken == ";") break;
+                CompileExpression();
+                
+                // Empurra o endereço base do array para a pilha
+                VarKind kind = _symbolTable.KindOf(varName);
+                int index = _symbolTable.IndexOf(varName);
+                _vmWriter.WritePush(GetSegment(kind), index);
+                
+                // Soma a base com o índice (base + índice)
+                _vmWriter.WriteArithmetic(Command.ADD); 
+                
                 ProcessToken();
                 _tokenizer.Advance();
             }
 
-            // Adiciona ';'
             ProcessToken();
             _tokenizer.Advance();
-
-            _writer.WriteLine("</letStatement>");
-        }
-
-        // Método para compilar um comando de do
-        public void CompileDo()
-        {
-            _writer.WriteLine("<doStatement>");
-            ProcessToken(); // 'do'
-
-            // No Jack, após o 'do' vem uma chamada de função
-            // Processar os tokens até o ';'
-            _tokenizer.Advance();
-            while (_tokenizer.CurrentToken != ";")
+            
+            // Compila o valor que vai ser atribuído
+            CompileExpression();
+            
+            // Guarda o valor
+            if (isArray)
             {
-                //if (_tokenizer.CurrentToken == ";") break;
-                ProcessToken();
-                _tokenizer.Advance();
+                // Lógica da VM para guardar valor num array
+                // Guardar temporariamente o valor que queremos atribuir
+                _vmWriter.WritePop(Segment.TEMP, 0); 
+                // Apontar o THAT (pointer 1) para o endereço de memória (base + índice)
+                _vmWriter.WritePop(Segment.POINTER, 1);
+                // Recuper o valor
+                _vmWriter.WritePush(Segment.TEMP, 0);
+                // Guardar o valor no array
+                _vmWriter.WritePop(Segment.THAT, 0);
+            }
+            else
+            {
+                // Fazer pop para a variável correspondente
+                VarKind kind = _symbolTable.KindOf(varName);
+                int index = _symbolTable.IndexOf(varName);
+                _vmWriter.WritePop(GetSegment(kind), index);
             }
 
             ProcessToken(); // ';'
-            _tokenizer.Advance();
-            _writer.WriteLine("</doStatement>");
         }
+        // Método para compilar um comando de do
+        public void CompileDo()
+        {
+            ProcessToken(); // 'do'
+            _tokenizer.Advance();
+            
+            // Lógica simplificada da chamada de sub-rotina:
+            string name = _tokenizer.CurrentToken;
+            _tokenizer.Advance();
 
+            if (_tokenizer.CurrentToken == ".")
+            {
+                name += ".";
+                _tokenizer.Advance(); // '.'
+                name += _tokenizer.CurrentToken;
+                _tokenizer.Advance();
+            }
+
+            _tokenizer.Advance();
+            
+            // Conta quantos argumentos tem
+            int nArgs = 0; 
+            
+            // Chamada para CompileExpressionList, que empurraria os argumentos
+            while (_tokenizer.CurrentToken != ")")
+            {
+                _tokenizer.Advance();
+            }
+            
+            _tokenizer.Advance(); // ')'
+            
+            // Faz a chamada e atira o retorno para o lixo
+            _vmWriter.WriteCall(name, nArgs);
+            _vmWriter.WritePop(Segment.TEMP, 0);
+            
+            ProcessToken(); // ';'
+        }
 
         public void CompileIf()
         {
@@ -541,6 +574,18 @@ namespace JackCompiler.Modules
             _tokenizer.Advance();
 
             _writer.WriteLine("</whileStatement>");
+        }
+
+        private Segment GetSegment(VarKind kind)
+        {
+            switch (kind)
+            {
+                case VarKind.STATIC: return Segment.STATIC;
+                case VarKind.FIELD: return Segment.THIS;
+                case VarKind.ARG: return Segment.ARG;
+                case VarKind.VAR: return Segment.LOCAL;
+                default: return Segment.LOCAL;
+            }
         }
     }
 }
