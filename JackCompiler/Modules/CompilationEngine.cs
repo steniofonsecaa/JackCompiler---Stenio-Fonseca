@@ -8,8 +8,10 @@ namespace JackCompiler.Modules
         private JackTokenizer _tokenizer;
         private VMWriter _vmWriter;
         private SymbolTable _symbolTable;
-        //private StreamWriter _writer;
         private string _className; // Para armazenar o nome da classe atual, útil para gerar código VM
+
+        private int _ifCount = 0;
+        private int _whileCount = 0;
 
         // Metodo construtor que agora inicializa o VMWriter e o SymbolTable
         public CompilationEngine(JackTokenizer tokenizer, string outputPath)
@@ -491,89 +493,107 @@ namespace JackCompiler.Modules
 
         public void CompileIf()
         {
-            _writer.WriteLine("<ifStatement>");
+            string ifTrue = $"IF_TRUE{_ifCount}";
+            string ifFalse = $"IF_FALSE{_ifCount}";
+            string ifEnd = $"IF_END{_ifCount}";
+            _ifCount++; // Aumenta para o próximo if
+
+            ProcessToken(); 
+            _tokenizer.Advance();
+            ProcessToken();
+
+            // Compila a condição
+            CompileExpression();
             
-            // Veriffica se há 'if'
-            ProcessToken();
+            // Inverte a condição
+            _vmWriter.WriteArithmetic(Command.NOT);
+            
+            // Se a condição original era falsa, salta para o rótulo FALSE
+            _vmWriter.WriteIf(ifFalse);
 
-            // Busca '('
+            ProcessToken(); 
             _tokenizer.Advance();
             ProcessToken();
 
-            // Identifica a Condição (Expression)
-            _tokenizer.Advance();
-            while (_tokenizer.CurrentToken != ")")
-            {
-                ProcessToken();
-                _tokenizer.Advance();
-            }
-            ProcessToken(); // Para processar o ')'
-
-            // Verifica '{' (Início do bloco if)
-            _tokenizer.Advance();
-            ProcessToken();
-
-            // Chamada RECURSIVA para processar os comandos dentro do if
+            // Executa os comandos do bloco IF (verdadeiro)
             _tokenizer.Advance();
             CompileStatements();
+            
+            // Salta para o fim do IF para não executar o ELSE por acidente
+            _vmWriter.WriteGoto(ifEnd);
 
-            // '}' (Fim do bloco if)
-            ProcessToken();
-            _tokenizer.Advance();
+            ProcessToken(); // '}'
 
-            // Tratamento do 'else'
-            if (_tokenizer.CurrentToken == "else")
+            // Marca o rótulo FALSE (onde o else começa)
+            _vmWriter.WriteLabel(ifFalse);
+
+            // Verifica se existe um 'else'
+            if (_tokenizer.HasMoreTokens())
             {
-                ProcessToken(); // 'else'
-                
                 _tokenizer.Advance();
-                ProcessToken(); // '{'
                 
-                _tokenizer.Advance();
-                CompileStatements(); // Comandos dentro do else
-                
-                ProcessToken(); // '}'
-                _tokenizer.Advance();
+                if (_tokenizer.CurrentToken == "else")
+                {
+                    ProcessToken();
+                    _tokenizer.Advance();
+                    ProcessToken();
+                    
+                    // Executa os comandos do bloco ELSE
+                    _tokenizer.Advance();
+                    CompileStatements();
+                    
+                    ProcessToken(); 
+                }
+                else
+                {
+                    
+                }
             }
-
-            _writer.WriteLine("</ifStatement>");
+            
+            // Marca o fim absoluto do bloco IF/ELSE
+            _vmWriter.WriteLabel(ifEnd);
         }
 
 
         public void CompileWhile()
         {
-            _writer.WriteLine("<whileStatement>");
+            // Cria os nomes únicos para os rótulos deste while específico
+            string whileExp = $"WHILE_EXP{_whileCount}";
+            string whileEnd = $"WHILE_END{_whileCount}";
+            _whileCount++; // Aumenta o contador para o próximo while
+
+            ProcessToken();
+
+            // Marca o início do loop
+            _vmWriter.WriteLabel(whileExp);
+
+            _tokenizer.Advance();
+            ProcessToken();
+
+            // Compila a condição
+            CompileExpression();
             
-            // Busca 'while'
-            ProcessToken();
+            // Inverte a condição (se era verdadeiro, fica falso, e vice-versa)
+            _vmWriter.WriteArithmetic(Command.NOT);
+            
+            // Se for verdadeiro, salta para o fim
+            _vmWriter.WriteIf(whileEnd);
 
-            // Identifica '('
+            ProcessToken();
             _tokenizer.Advance();
             ProcessToken();
 
-            // Avalia Condição (Expression)
-            // Avançamos até fechar o parêntese da condição
-            _tokenizer.Advance();
-            while (_tokenizer.CurrentToken != ")")
-            {
-                ProcessToken();
-                _tokenizer.Advance();
-            }
-
-            ProcessToken(); // Para processar o ')' 
-            //'{' (Início do bloco de repetição)
-            _tokenizer.Advance();
-            ProcessToken();
-
-            // Chamada RECURSIVA para os comandos dentro do while
+            // Executa os comandos dentro do while
             _tokenizer.Advance();
             CompileStatements();
 
-            // '}' (Fim do bloco while)
             ProcessToken();
-            _tokenizer.Advance();
-
-            _writer.WriteLine("</whileStatement>");
+            
+            // Salta de volta para avaliar a condição novamente
+            _vmWriter.WriteGoto(whileExp);
+            
+            // Marca o fim do loop
+            _vmWriter.WriteLabel(whileEnd);
         }
 
         private Segment GetSegment(VarKind kind)
