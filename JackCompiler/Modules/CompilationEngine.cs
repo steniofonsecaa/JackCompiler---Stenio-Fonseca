@@ -346,27 +346,99 @@ namespace JackCompiler.Modules
         {
             string token = _tokenizer.CurrentToken;
             
-            // Verifica se é um número inteiro (ex: 123)
+            // Números inteiros
             if (int.TryParse(token, out int val))
             {
                 _vmWriter.WritePush(Segment.CONST, val);
                 _tokenizer.Advance();
             }
-            // Verifica se é uma variável conhecida na nossa Tabela de Símbolos
-            else if (_symbolTable.KindOf(token) != VarKind.NONE)
+            // Strings
+            else if (token.StartsWith("\""))
             {
-                VarKind kind = _symbolTable.KindOf(token);
-                int index = _symbolTable.IndexOf(token);
+                string str = token.Replace("\"", ""); // Remove as aspas
+                _vmWriter.WritePush(Segment.CONST, str.Length);
+                _vmWriter.WriteCall("String.new", 1);
                 
-                Segment seg = Segment.LOCAL;
-                if (kind == VarKind.STATIC) seg = Segment.STATIC;
-                else if (kind == VarKind.FIELD) seg = Segment.THIS;
-                else if (kind == VarKind.ARG) seg = Segment.ARG;
-                
-                _vmWriter.WritePush(seg, index);
+                foreach (char c in str)
+                {
+                    _vmWriter.WritePush(Segment.CONST, (int)c);
+                    _vmWriter.WriteCall("String.appendChar", 2);
+                }
                 _tokenizer.Advance();
             }
+            // Constantes Palavra-Chave (true, false, null, this)
+            else if (token == "true")
+            {
+                _vmWriter.WritePush(Segment.CONST, 1);
+                _vmWriter.WriteArithmetic(Command.NEG); // No Jack, true é -1
+                _tokenizer.Advance();
+            }
+            else if (token == "false" || token == "null")
+            {
+                _vmWriter.WritePush(Segment.CONST, 0); // False e Null são 0
+                _tokenizer.Advance();
+            }
+            else if (token == "this")
+            {
+                _vmWriter.WritePush(Segment.POINTER, 0);
+                _tokenizer.Advance();
+            }
+            // Operadores Unários
+            else if (token == "-" || token == "~")
+            {
+                _tokenizer.Advance();
+                CompileTerm(); // Recursividade para resolver o termo a seguir
+                
+                if (token == "-") _vmWriter.WriteArithmetic(Command.NEG);
+                else _vmWriter.WriteArithmetic(Command.NOT);
+            }
+            // Parênteses agrupados (ex: (2 + 3) )
+            else if (token == "(")
+            {
+                ProcessToken(); // Lê o '('
+                _tokenizer.Advance();
+                CompileExpression();
+                ProcessToken(); // Lê o ')'
+                _tokenizer.Advance();
+            }
+            // Variáveis, Arrays ou Chamadas de Função
+            else
+            {
+                string identifier = token;
+                _tokenizer.Advance();
 
+                // Verifica se é uma atribuição de array (ex: arr[5])
+                if (_tokenizer.CurrentToken == "[") 
+                {
+                    ProcessToken(); // '['
+                    _tokenizer.Advance();
+                    CompileExpression(); // Índice
+                    ProcessToken(); // ']'
+                    _tokenizer.Advance();
+
+                    // Lógica VM para ler valor de um array
+                    VarKind kind = _symbolTable.KindOf(identifier);
+                    int index = _symbolTable.IndexOf(identifier);
+                    _vmWriter.WritePush(GetSegment(kind), index);
+                    
+                    _vmWriter.WriteArithmetic(Command.ADD); // Endereço base + índice
+                    
+                    _vmWriter.WritePop(Segment.POINTER, 1); // Põe no THAT
+                    _vmWriter.WritePush(Segment.THAT, 0);   // Recupera o valor
+                }
+                // Verifica se é uma chamada de função (ex: myFunction() ou obj.method())
+                else if (_tokenizer.CurrentToken == "(" || _tokenizer.CurrentToken == ".") 
+                {
+                    CompileSubroutineCall(identifier);
+                }
+                // Caso seja apenas uma variável simples, empurra seu valor para a pilha
+                else 
+                {
+                    VarKind kind = _symbolTable.KindOf(identifier);
+                    int index = _symbolTable.IndexOf(identifier);
+                    _vmWriter.WritePush(GetSegment(kind), index);
+                }
+            }
         }
 
         // Método para compilar um comando de retorno, seguindo a estrutura da gramática do Jack
@@ -453,42 +525,23 @@ namespace JackCompiler.Modules
 
             ProcessToken(); // ';'
         }
-        // Método para compilar um comando de do
+        // Método para compilar um comando de do, seguindo a estrutura da gramática do Jack
         public void CompileDo()
         {
-            ProcessToken(); // 'do'
-            _tokenizer.Advance();
-            
-            // Lógica simplificada da chamada de sub-rotina:
-            string name = _tokenizer.CurrentToken;
+            ProcessToken();
             _tokenizer.Advance();
 
-            if (_tokenizer.CurrentToken == ".")
-            {
-                name += ".";
-                _tokenizer.Advance(); // '.'
-                name += _tokenizer.CurrentToken;
-                _tokenizer.Advance();
-            }
-
+            // Pega o nome principal (pode ser da classe, do objeto ou da função)
+            string identifier = _tokenizer.CurrentToken;
             _tokenizer.Advance();
+
+            // Chama o auxiliar para compilar a chamada de sub-rotina, passando o identificador principal
+            CompileSubroutineCall(identifier);
+
+            // O comando 'do' sempre ignora o retorno da função, mandando para o lixo
+            _vmWriter.WritePop(Segment.TEMP, 0); 
             
-            // Conta quantos argumentos tem
-            int nArgs = 0; 
-            
-            // Chamada para CompileExpressionList, que empurraria os argumentos
-            while (_tokenizer.CurrentToken != ")")
-            {
-                _tokenizer.Advance();
-            }
-            
-            _tokenizer.Advance(); // ')'
-            
-            // Faz a chamada e atira o retorno para o lixo
-            _vmWriter.WriteCall(name, nArgs);
-            _vmWriter.WritePop(Segment.TEMP, 0);
-            
-            ProcessToken(); // ';'
+            ProcessToken(); // Lê o ';'
         }
 
         public void CompileIf()
@@ -606,6 +659,84 @@ namespace JackCompiler.Modules
                 case VarKind.VAR: return Segment.LOCAL;
                 default: return Segment.LOCAL;
             }
+        }
+
+        public int CompileExpressionList()
+        {
+            int nArgs = 0;
+
+            // Se o token atual for ')', a lista está vazia
+            if (_tokenizer.CurrentToken != ")")
+            {
+                CompileExpression(); // Compila o primeiro argumento
+                nArgs++;
+
+                // Enquanto houver vírgulas, há mais argumentos
+                while (_tokenizer.CurrentToken == ",")
+                {
+                    ProcessToken(); // Lê a vírgula
+                    _tokenizer.Advance();
+                    
+                    CompileExpression(); // Compila o próximo argumento
+                    nArgs++;
+                }
+            }
+
+            return nArgs;
+        }
+
+        private void CompileSubroutineCall(string identifier)
+        {
+            int nArgs = 0;
+            string functionName = identifier;
+
+            if (_tokenizer.CurrentToken == ".")
+            {
+                string objName = identifier;
+                ProcessToken();
+                _tokenizer.Advance();
+                
+                string methodName = _tokenizer.CurrentToken;
+                _tokenizer.Advance();
+
+                // Verifica na Tabela de Símbolos se é um objeto (instância)
+                VarKind kind = _symbolTable.KindOf(objName);
+                
+                if (kind != VarKind.NONE) 
+                {
+                    // Descobre o tipo da variável (que é a classe do objeto) para formar o nome completo da função
+                    string type = _symbolTable.TypeOf(objName);
+                    functionName = $"{type}.{methodName}";
+                    
+                    // O primeiro argumento (0) de um método é a própria instância
+                    _vmWriter.WritePush(GetSegment(kind), _symbolTable.IndexOf(objName));
+                    nArgs++;
+                }
+                else 
+                {
+                    // Se não está na tabela, é uma classe
+                    functionName = $"{objName}.{methodName}";
+                }
+            }
+            else if (_tokenizer.CurrentToken == "(")
+            {
+                functionName = $"{_className}.{identifier}";
+                
+                _vmWriter.WritePush(Segment.POINTER, 0); 
+                nArgs++;
+            }
+
+            ProcessToken();
+            _tokenizer.Advance();
+
+            // Compila e soma a quantidade de argumentos dentro dos parênteses
+            nArgs += CompileExpressionList();
+
+            ProcessToken();
+            _tokenizer.Advance();
+
+            // Por ultimo, chama a função
+            _vmWriter.WriteCall(functionName, nArgs);
         }
     }
 }
