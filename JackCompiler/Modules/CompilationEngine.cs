@@ -19,6 +19,7 @@ namespace JackCompiler.Modules
             _tokenizer = tokenizer;
             _vmWriter = new VMWriter(outputPath);
             _symbolTable = new SymbolTable();
+            _className = "";
         }
 
         // Metodo Close para fechar o VMWriter e liberar recursos
@@ -284,29 +285,17 @@ namespace JackCompiler.Modules
         // Metodo para compilar os comandos dentro do corpo de uma sub-rotina, seguindo a estrutura da gramática do Jack
         public void CompileStatements()
         {
-            _writer.WriteLine("<statements>");
-
-            // Processa os comandos enquanto não encontrar o fechamento do bloco (})
-            while (true)
+            // Não precisamos mais do while(true). O loop avalia exatamente os comandos permitidos.
+            while (_tokenizer.CurrentToken == "let" || _tokenizer.CurrentToken == "if" || 
+                _tokenizer.CurrentToken == "while" || _tokenizer.CurrentToken == "do" || 
+                _tokenizer.CurrentToken == "return")
             {
-                string token = _tokenizer.CurrentToken;
-                
-                if (token == "let") CompileLet();
-                else if (token == "if") CompileIf();
-                else if (token == "while") CompileWhile();
-                else if (token == "do") CompileDo();
-                else if (token == "return") CompileReturn();
-                else break; // Se não for nenhum comando, sai do loop (provavelmente achou '}')
-
-                // Após processar um comando, precisamos avançar para ver o próximo
-                //if (_tokenizer.HasMoreTokens()) 
-                //{
-                //    _tokenizer.Advance();
-                //}
-                //else break;
+                if (_tokenizer.CurrentToken == "let") CompileLet();
+                else if (_tokenizer.CurrentToken == "if") CompileIf();
+                else if (_tokenizer.CurrentToken == "while") CompileWhile();
+                else if (_tokenizer.CurrentToken == "do") CompileDo();
+                else if (_tokenizer.CurrentToken == "return") CompileReturn();
             }
-
-            _writer.WriteLine("</statements>");
         }
 
         // Método para compilar uma expressão, seguindo a estrutura da gramática do Jack
@@ -460,7 +449,8 @@ namespace JackCompiler.Modules
 
             _vmWriter.WriteReturn(); // Escreve 'return' no .vm
 
-            ProcessToken(); // Processa o ';' que encerra o comando
+            ProcessToken();
+            _tokenizer.Advance();
         }
 
         // Método para compilar um comando de let, seguindo a estrutura da gramática do Jack
@@ -523,7 +513,8 @@ namespace JackCompiler.Modules
                 _vmWriter.WritePop(GetSegment(kind), index);
             }
 
-            ProcessToken(); // ';'
+            ProcessToken();
+            _tokenizer.Advance();
         }
         // Método para compilar um comando de do, seguindo a estrutura da gramática do Jack
         public void CompileDo()
@@ -541,7 +532,8 @@ namespace JackCompiler.Modules
             // O comando 'do' sempre ignora o retorno da função, mandando para o lixo
             _vmWriter.WritePop(Segment.TEMP, 0); 
             
-            ProcessToken(); // Lê o ';'
+            ProcessToken();
+            _tokenizer.Advance();
         }
 
         public void CompileIf()
@@ -596,11 +588,12 @@ namespace JackCompiler.Modules
                     CompileStatements();
                     
                     ProcessToken(); 
+                    _tokenizer.Advance();
                 }
-                else
-                {
+                //else
+                //{
                     
-                }
+                //}
             }
             
             // Marca o fim absoluto do bloco IF/ELSE
@@ -647,6 +640,7 @@ namespace JackCompiler.Modules
             
             // Marca o fim do loop
             _vmWriter.WriteLabel(whileEnd);
+            _tokenizer.Advance();
         }
 
         private Segment GetSegment(VarKind kind)
@@ -705,7 +699,7 @@ namespace JackCompiler.Modules
                 if (kind != VarKind.NONE) 
                 {
                     // Descobre o tipo da variável (que é a classe do objeto) para formar o nome completo da função
-                    string type = _symbolTable.TypeOf(objName);
+                    string type = _symbolTable.TypeOf(objName) ?? "";
                     functionName = $"{type}.{methodName}";
                     
                     // O primeiro argumento (0) de um método é a própria instância
