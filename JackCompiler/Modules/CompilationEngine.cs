@@ -307,6 +307,66 @@ namespace JackCompiler.Modules
             _writer.WriteLine("</statements>");
         }
 
+        // Método para compilar uma expressão, seguindo a estrutura da gramática do Jack
+        public void CompileExpression()
+        {
+            CompileTerm(); // Compila o primeiro valor
+            
+            // Enquanto houver operadores matemáticos ou lógicos...
+            while (_tokenizer.CurrentToken == "+" || _tokenizer.CurrentToken == "-" || 
+                _tokenizer.CurrentToken == "*" || _tokenizer.CurrentToken == "/" || 
+                _tokenizer.CurrentToken == "&" || _tokenizer.CurrentToken == "|" || 
+                _tokenizer.CurrentToken == "<" || _tokenizer.CurrentToken == ">" || 
+                _tokenizer.CurrentToken == "=")
+            {
+                string op = _tokenizer.CurrentToken;
+                
+                _tokenizer.Advance(); // Avança o operador
+                CompileTerm();        // Compila o segundo valor
+                
+                // Empurra o comando aritmético correspondente ao operador para o arquivo .vm
+                switch (op)
+                {
+                    case "+": _vmWriter.WriteArithmetic(Command.ADD); break;
+                    case "-": _vmWriter.WriteArithmetic(Command.SUB); break;
+                    case "*": _vmWriter.WriteCall("Math.multiply", 2); break;
+                    case "/": _vmWriter.WriteCall("Math.divide", 2); break;  
+                    case "&": _vmWriter.WriteArithmetic(Command.AND); break;
+                    case "|": _vmWriter.WriteArithmetic(Command.OR); break;
+                    case "<": _vmWriter.WriteArithmetic(Command.LT); break;
+                    case ">": _vmWriter.WriteArithmetic(Command.GT); break;
+                    case "=": _vmWriter.WriteArithmetic(Command.EQ); break;
+                }
+            }
+        }
+
+        public void CompileTerm()
+        {
+            string token = _tokenizer.CurrentToken;
+            
+            // Verifica se é um número inteiro (ex: 123)
+            if (int.TryParse(token, out int val))
+            {
+                _vmWriter.WritePush(Segment.CONST, val);
+                _tokenizer.Advance();
+            }
+            // Verifica se é uma variável conhecida na nossa Tabela de Símbolos
+            else if (_symbolTable.KindOf(token) != VarKind.NONE)
+            {
+                VarKind kind = _symbolTable.KindOf(token);
+                int index = _symbolTable.IndexOf(token);
+                
+                Segment seg = Segment.LOCAL;
+                if (kind == VarKind.STATIC) seg = Segment.STATIC;
+                else if (kind == VarKind.FIELD) seg = Segment.THIS;
+                else if (kind == VarKind.ARG) seg = Segment.ARG;
+                
+                _vmWriter.WritePush(seg, index);
+                _tokenizer.Advance();
+            }
+            
+        }
+
         // Método para compilar um comando de retorno, seguindo a estrutura da gramática do Jack
         public void CompileReturn()
         {
