@@ -310,20 +310,23 @@ namespace JackCompiler.Modules
         // Método para compilar um comando de retorno, seguindo a estrutura da gramática do Jack
         public void CompileReturn()
         {
-            _writer.WriteLine("<returnStatement>");
-            ProcessToken(); // chave 'return'
+            ProcessToken();
+            _tokenizer.Advance(); // Avança para ver o que vem a seguir
 
-            _tokenizer.Advance();
+            // Se não for ';', significa que há um valor a ser retornado (ex: return x;)
             if (_tokenizer.CurrentToken != ";")
             {
-                // Desenvolvimento
-                ProcessToken(); 
-                _tokenizer.Advance();
+                CompileExpression(); 
+            }
+            else
+            {
+                // Se for void (return;), a máquina virtual exige que empurremos 0 para a pilha
+                _vmWriter.WritePush(Segment.CONST, 0);
             }
 
-            ProcessToken(); // simbolo ';'
-            _tokenizer.Advance();
-            _writer.WriteLine("</returnStatement>");
+            _vmWriter.WriteReturn(); // Escreve 'return' no .vm
+
+            ProcessToken(); // Processa o ';' que encerra o comando
         }
 
         // Método para compilar um comando de let, seguindo a estrutura da gramática do Jack
