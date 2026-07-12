@@ -115,12 +115,21 @@ namespace JackCompiler.Modules
             var tipo = GetTokenType();
             string tag = tipo.ToString().ToLower().Replace("_const", "Constant");
             
-            // Substituição de caracteres especiais para a saída XML
             string valor = CurrentToken;
-            if (valor == "<") valor = "&lt;";
-            else if (valor == ">") valor = "&gt;";
-            else if (valor == "\"") valor = "&quot;";
-            else if (valor == "&") valor = "&amp;";
+
+            // Se for uma string, removemos as aspas duplas das pontas
+            if (tipo == TokenType.STRING_CONST)
+            {
+                valor = valor.Substring(1, valor.Length - 2);
+            }
+            else
+            {
+                // Substituição de caracteres especiais exigida pelo XML (apenas se não for string)
+                if (valor == "<") valor = "&lt;";
+                else if (valor == ">") valor = "&gt;";
+                else if (valor == "\"") valor = "&quot;";
+                else if (valor == "&") valor = "&amp;";
+            }
 
             return $"<{tag}> {valor} </{tag}>";
         }
