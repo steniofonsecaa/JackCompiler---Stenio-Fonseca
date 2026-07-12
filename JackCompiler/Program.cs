@@ -30,7 +30,7 @@ namespace JackCompiler
         static void ProcessFile(string filePath)
         {
             // O analisador sintático gera o ficheiro com a extensão final .xml
-            string outputPath = Path.ChangeExtension(filePath, ".xml"); 
+            string outputPath = Path.ChangeExtension(filePath, ".P.xml");
             
             Console.WriteLine($"A iniciar a análise sintática de: {Path.GetFileName(filePath)}...");
 
